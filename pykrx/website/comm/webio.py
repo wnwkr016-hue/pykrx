@@ -6,7 +6,7 @@ class Get:
     def __init__(self):
         self.headers = {
             "User-Agent": "Mozilla/5.0", 
-            "Referer": "http://data.krx.co.kr/"
+            "Referer": "https://data.krx.co.kr/contents/MDC/MDI/outerLoader/index.cmd"
         }
 
     def read(self, **params):
@@ -23,7 +23,7 @@ class Post:
     def __init__(self, headers=None):
         self.headers = {
             "User-Agent": "Mozilla/5.0",
-            "Referer": "http://data.krx.co.kr/"
+            "Referer": "https://data.krx.co.kr/contents/MDC/MDI/outerLoader/index.cmd"
         }
         if headers is not None:
             self.headers.update(headers)
