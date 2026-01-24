@@ -1,11 +1,12 @@
-import unittest
+import pytest
 from pykrx import stock
 import pandas as pd
 import numpy as np
 # pylint: disable-all
 # flake8: noqa
 
-class StockBusinessDaysTest(unittest.TestCase):
+
+class TestStockBusinessDaysTest:
     def test_every_month(self):
         year = 2020
         for month in range(1, 13):
@@ -21,7 +22,7 @@ class StockBusinessDaysTest(unittest.TestCase):
         self.assertIsInstance(days[0], pd._libs.tslibs.timestamps.Timestamp)
 
 
-class StockOhlcvByDateTest(unittest.TestCase):
+class TestStockOhlcvByDateTest:
     def test_ohlcv_simple_call(self):
         df = stock.get_market_ohlcv_by_date("20210118", "20210126", "005930")
         #               시가    고가    저가    종가      거래량         거래대금  등락률
@@ -33,7 +34,7 @@ class StockOhlcvByDateTest(unittest.TestCase):
         # 2021-01-22  89000  89700  86800  86800  30861661  2717635251520 -1.48
         temp = df.iloc[0:5, 0] == np.array([86600, 84500, 89000, 87500, 89000])
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         self.assertTrue(df.index[0] < df.index[-1])
 
@@ -51,11 +52,13 @@ class StockOhlcvByDateTest(unittest.TestCase):
         # 2018-05-02      0      0      0  53000         0              0  0.00
         # 2018-05-03      0      0      0  53000         0              0  0.00
         # 2018-05-04  53000  53900  51800  51900  39565391  2078017927600 -2.08
-        self.assertEqual(df.loc['2018-04-27']['시가'], 53380)
-        self.assertEqual(df.loc['2018-05-04']['시가'], 53000)
+        self.assertEqual(df.loc["2018-04-27"]["시가"], 53380)
+        self.assertEqual(df.loc["2018-05-04"]["시가"], 53000)
 
     def test_ohlcv_with_not_adjusted(self):
-        df = stock.get_market_ohlcv_by_date("20180427", "20180504", "005930", adjusted=False)
+        df = stock.get_market_ohlcv_by_date(
+            "20180427", "20180504", "005930", adjusted=False
+        )
         #                 시가       고가      저가      종가     거래량         거래대금   등락률
         # 날짜
         # 2018-04-27  2669000  2682000  2622000  2650000    606216  1611240055340  1.65
@@ -63,11 +66,11 @@ class StockOhlcvByDateTest(unittest.TestCase):
         # 2018-05-02        0        0        0  2650000         0              0  0.00
         # 2018-05-03        0        0        0  2650000         0              0  0.00
         # 2018-05-04    53000    53900    51800    51900  39565391  2078017927600 -2.08
-        self.assertEqual(df.loc['2018-04-27']['시가'], 2669000)
-        self.assertEqual(df.loc['2018-05-04']['시가'], 53000)
+        self.assertEqual(df.loc["2018-04-27"]["시가"], 2669000)
+        self.assertEqual(df.loc["2018-05-04"]["시가"], 53000)
 
 
-class StockOhlcvByTickerTest(unittest.TestCase):
+class TestStockOhlcvByTickerTest:
     def test_ohlcv_for_a_day(self):
         df = stock.get_market_ohlcv_by_ticker("20210122")
         #           시가    고가    저가    종가   거래량     거래대금     등락률
@@ -78,7 +81,9 @@ class StockOhlcvByTickerTest(unittest.TestCase):
         # 282330  156500  156500  151500  152000    62510   9555364000  -2.560547
         temp = df.iloc[0:5, 0] == np.array([4190, 25750, 5020, 156500, 5720])
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["095570", "006840", "027410", "282330", "138930"])
+        temp = df.index[0:5] == np.array(
+            ["095570", "006840", "027410", "282330", "138930"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_ohlcv_for_a_day_in_kosdaq(self):
@@ -92,23 +97,27 @@ class StockOhlcvByTickerTest(unittest.TestCase):
         # 035760  165200  166900  162600  163800   179018  29574003100  0.429932
         temp = df.iloc[0:5, 0] == np.array([2265, 7210, 25850, 10250, 165200])
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["060310", "054620", "265520", "211270", "035760"])
+        temp = df.index[0:5] == np.array(
+            ["060310", "054620", "265520", "211270", "035760"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_ohlcv_for_a_day_on_holiday1(self):
-        df0 = stock.get_market_ohlcv_by_ticker("20210123", alternative=True)    # Saturday
-        df1 = stock.get_market_ohlcv_by_ticker("20210122")                      # Friday
+        df0 = stock.get_market_ohlcv_by_ticker("20210123", alternative=True)  # Saturday
+        df1 = stock.get_market_ohlcv_by_ticker("20210122")  # Friday
         self.assertTrue((df0 == df1).all(axis=None))
 
     def test_ohlcv_for_a_day_on_holiday2(self):
-        df0 = stock.get_market_ohlcv_by_ticker("20210123", alternative=True)   # Saturday
-        df1 = stock.get_market_ohlcv_by_ticker("20210122")                     # Friday
+        df0 = stock.get_market_ohlcv_by_ticker("20210123", alternative=True)  # Saturday
+        df1 = stock.get_market_ohlcv_by_ticker("20210122")  # Friday
         self.assertTrue((df0 == df1).all(axis=None))
 
 
-class StockPriceChangeByTicker(unittest.TestCase):
+class TestStockPriceChangeByTicker:
     def test_with_valid_business_days(self):
-        df = stock.get_market_price_change_by_ticker(fromdate="20210104", todate="20210111")
+        df = stock.get_market_price_change_by_ticker(
+            fromdate="20210104", todate="20210111"
+        )
         #            종목명      시가    종가  변동폭    등락률       거래량      거래대금
         # 티커
         # 095570   AJ네트웍스    4615    4360    -255    -553.0      3445854   16332546190
@@ -121,13 +130,16 @@ class StockPriceChangeByTicker(unittest.TestCase):
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holidays(self):
-        df = stock.get_market_price_change_by_ticker(fromdate="20210710", todate="20210711")
+        df = stock.get_market_price_change_by_ticker(
+            fromdate="20210710", todate="20210711"
+        )
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.empty)
 
-
     def test_with_holiday(self):
-        df = stock.get_market_price_change_by_ticker(fromdate="20210101", todate="20210111")
+        df = stock.get_market_price_change_by_ticker(
+            fromdate="20210101", todate="20210111"
+        )
         #            종목명      시가    종가  변동폭    등락률       거래량      거래대금
         # 티커
         # 095570   AJ네트웍스    4615    4360    -255    -553.0      3445854   16332546190
@@ -140,36 +152,44 @@ class StockPriceChangeByTicker(unittest.TestCase):
         self.assertEqual(temp.sum(), 5)
 
     def test_with_dash_dates(self):
-        df = stock.get_market_price_change_by_ticker(fromdate="2021-01-04", todate="20210111")
+        df = stock.get_market_price_change_by_ticker(
+            fromdate="2021-01-04", todate="20210111"
+        )
         temp = df.iloc[0:5, 1] == np.array([4615, 25150, 4895, 135500, 5680])
         self.assertEqual(temp.sum(), 5)
 
-        df = stock.get_market_price_change_by_ticker(fromdate="2021-01-04", todate="2021-01-11")
+        df = stock.get_market_price_change_by_ticker(
+            fromdate="2021-01-04", todate="2021-01-11"
+        )
         temp = df.iloc[0:5, 1] == np.array([4615, 25150, 4895, 135500, 5680])
         self.assertEqual(temp.sum(), 5)
 
     def test_with_adjusted(self):
-        df_adjusted = stock.get_market_price_change_by_ticker(fromdate="20180427", todate="20180504")
-        samsung_adjusted = df_adjusted.loc['005930']
+        df_adjusted = stock.get_market_price_change_by_ticker(
+            fromdate="20180427", todate="20180504"
+        )
+        samsung_adjusted = df_adjusted.loc["005930"]
         # 종목명    삼성전자
         # 시가      52140
         # 종가      51900
         # ...
-        self.assertEqual(samsung_adjusted['시가'], 52140)
-        self.assertEqual(samsung_adjusted['종가'], 51900)
+        self.assertEqual(samsung_adjusted["시가"], 52140)
+        self.assertEqual(samsung_adjusted["종가"], 51900)
 
     def test_with_not_adjusted(self):
-        df_not_adjusted = stock.get_market_price_change_by_ticker(fromdate="20180427", todate="20180504", adjusted=False)
+        df_not_adjusted = stock.get_market_price_change_by_ticker(
+            fromdate="20180427", todate="20180504", adjusted=False
+        )
         # 종목명    삼성전자
         # 시가      2607000
         # 종가      51900
         # ...
-        samsung_not_adjusted = df_not_adjusted.loc['005930']
-        self.assertEqual(samsung_not_adjusted['시가'], 2607000)
-        self.assertEqual(samsung_not_adjusted['종가'], 51900)
+        samsung_not_adjusted = df_not_adjusted.loc["005930"]
+        self.assertEqual(samsung_not_adjusted["시가"], 2607000)
+        self.assertEqual(samsung_not_adjusted["종가"], 51900)
 
 
-class StockFundamentalByDate(unittest.TestCase):
+class TestStockFundamentalByDate:
     def test_with_valid_business_days(self):
         df = stock.get_market_fundamental_by_date("20210104", "20210108", "005930")
         #               BPS    PER   PBR   EPS   DIV   DPS
@@ -180,7 +200,7 @@ class StockFundamentalByDate(unittest.TestCase):
         # 2021-01-07  37528  26.18  2.21  3166  1.71  1416
         # 2021-01-08  37528  28.05  2.37  3166  1.59  1416
         self.assertIsInstance(df, pd.DataFrame)
-        temp = np.isclose(df.iloc[0], [37528, 26.22,  2.21, 3166, 1.71, 1416])
+        temp = np.isclose(df.iloc[0], [37528, 26.22, 2.21, 3166, 1.71, 1416])
         self.assertEqual(temp.sum(), 6)
         self.assertEqual(len(df), 5)
 
@@ -188,7 +208,7 @@ class StockFundamentalByDate(unittest.TestCase):
         # 20210104 monday / 20210109 saturday
         df = stock.get_market_fundamental_by_date("20210104", "20210109", "005930")
         self.assertIsInstance(df, pd.DataFrame)
-        temp = np.isclose(df.iloc[0], [37528, 26.22,  2.21, 3166, 1.71, 1416])
+        temp = np.isclose(df.iloc[0], [37528, 26.22, 2.21, 3166, 1.71, 1416])
         self.assertEqual(temp.sum(), 6)
         self.assertEqual(len(df), 5)
 
@@ -196,14 +216,16 @@ class StockFundamentalByDate(unittest.TestCase):
         # 20210103 sunday / 20210110 sunday
         df = stock.get_market_fundamental_by_date("20210103", "20210110", "005930")
         self.assertIsInstance(df, pd.DataFrame)
-        temp = np.isclose(df.iloc[0], [37528, 26.22,  2.21, 3166, 1.71, 1416])
+        temp = np.isclose(df.iloc[0], [37528, 26.22, 2.21, 3166, 1.71, 1416])
         self.assertEqual(temp.sum(), 6)
         self.assertEqual(len(df), 5)
 
     def test_with_freq(self):
-        df = stock.get_market_fundamental_by_date("20200101", "20200430", "005930", freq="m")
+        df = stock.get_market_fundamental_by_date(
+            "20200101", "20200430", "005930", freq="m"
+        )
         self.assertIsInstance(df, pd.DataFrame)
-        temp = np.isclose(df.iloc[0], [35342, 8.54,  1.56, 6461, 2.57, 1416])
+        temp = np.isclose(df.iloc[0], [35342, 8.54, 1.56, 6461, 2.57, 1416])
         self.assertEqual(temp.sum(), 6)
         self.assertEqual(len(df), 4)
 
@@ -217,11 +239,11 @@ class StockFundamentalByDate(unittest.TestCase):
         # 2020-01-07  3033  45.73  6.18  410  0.0    0
         # 2020-01-08  3033  44.15  5.97  410  0.0    0
         self.assertIsInstance(df, pd.DataFrame)
-        temp = np.isclose(df.iloc[0], [3033, 48.78,  6.59, 410, 0.0, 0])
+        temp = np.isclose(df.iloc[0], [3033, 48.78, 6.59, 410, 0.0, 0])
         self.assertEqual(temp.sum(), 6)
 
 
-class StockFundamentalByTicker(unittest.TestCase):
+class TestStockFundamentalByTicker:
     def test_with_valid_a_business_day(self):
         # 20210108 friday
         df = stock.get_market_fundamental_by_ticker("20210108")
@@ -246,7 +268,7 @@ class StockFundamentalByTicker(unittest.TestCase):
         self.assertEqual(len(df), 895)
 
 
-class StockMarketCapByTicker(unittest.TestCase):
+class TestStockMarketCapByTicker:
     def test_with_a_businessday(self):
         df = stock.get_market_cap_by_ticker("20210104")
         #           종가         시가총액    거래량       거래대금  상장주식수
@@ -269,9 +291,11 @@ class StockMarketCapByTicker(unittest.TestCase):
         self.assertEqual(len(result), 0)
 
 
-class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
+class TestStockNetPurchasesOfEquitiesByTickerTest:
     def test_net_purchases_of_equities_is_same_0(self):
-        df = stock.get_market_net_purchases_of_equities_by_ticker("20210115", "20210122")
+        df = stock.get_market_net_purchases_of_equities_by_ticker(
+            "20210115", "20210122"
+        )
         #               종목명  매도거래량  매수거래량   순매수거래량   매도거래대금   매수거래대금 순매수거래대금
         # 티커
         # 005930      삼성전자    79567418   102852747       23285329  6918846810800  8972911580500  2054064769700
@@ -279,9 +303,13 @@ class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
         # 005935    삼성전자우    15849762    20011325        4161563  1207133611400  1528694164400   321560553000
         # 051910        LG화학      709872      921975         212103   700823533000   908593419000   207769886000
         # 096770  SK이노베이션     4848359     5515777         667418  1298854139000  1478890602000   180036463000
-        temp = df.iloc[0:5, -1] == np.array([2054064769700, 516414948600, 321560553000, 207769886000, 180036463000])
+        temp = df.iloc[0:5, -1] == np.array(
+            [2054064769700, 516414948600, 321560553000, 207769886000, 180036463000]
+        )
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["005930", "000270", "005935", "051910", "096770"])
+        temp = df.index[0:5] == np.array(
+            ["005930", "000270", "005935", "051910", "096770"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_net_purchases_of_equities_is_same_1(self):
@@ -292,10 +320,16 @@ class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
         # 000660    SK하이닉스     3146942     3401946       255004   409523728500   443014951000    33491222500
         # 017670      SK텔레콤      433019      564491       131472   108248823000   141157900500    32909077500
         # 086280  현대글로비스      306280      447356       141076    61999464500    91084909000    29085444500
-        df = stock.get_market_net_purchases_of_equities_by_ticker("20210115", "20210122", investor="금융투자")
-        temp = df.iloc[0:5, -1] == np.array([42142686000, 40172664000, 33491222500, 32909077500, 29085444500])
+        df = stock.get_market_net_purchases_of_equities_by_ticker(
+            "20210115", "20210122", investor="금융투자"
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [42142686000, 40172664000, 33491222500, 32909077500, 29085444500]
+        )
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["034730", "035420", "000660", "017670", "086280"])
+        temp = df.index[0:5] == np.array(
+            ["034730", "035420", "000660", "017670", "086280"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_net_purchases_of_equities_is_same_2(self):
@@ -306,10 +340,16 @@ class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
         # 027410           BGF     4987904     4987904            0    25072969705    25072969705              0
         # 282330     BGF리테일      410697      410697            0    61421158500    61421158500              0
         # 138930   BNK금융지주    11505016    11505016            0    66265083520    66265083520              0
-        df = stock.get_market_net_purchases_of_equities_by_ticker("20210115", "20210122", investor="전체")
-        temp = df.iloc[0:5, -2] == np.array([8914353675, 38080803500, 25072969705, 61421158500, 66265083520])
+        df = stock.get_market_net_purchases_of_equities_by_ticker(
+            "20210115", "20210122", investor="전체"
+        )
+        temp = df.iloc[0:5, -2] == np.array(
+            [8914353675, 38080803500, 25072969705, 61421158500, 66265083520]
+        )
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["095570", "006840", "027410", "282330", "138930"])
+        temp = df.index[0:5] == np.array(
+            ["095570", "006840", "027410", "282330", "138930"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_net_purchases_of_equities_is_same_in_kosdaq(self):
@@ -320,10 +360,16 @@ class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
         # 235980      메드팩토     4013688     4234321       220633   351960930900   372072449300    20111518400
         # 039200      오스코텍     4720525     5104237       383712   214412650350   233303007450    18890357100
         # 000250    삼천당제약     2065806     2302470       236664   138698548300   154602581800    15904033500
-        df = stock.get_market_net_purchases_of_equities_by_ticker("20210115", "20210122", market="KOSDAQ")
-        temp = df.iloc[0:5, -1] == np.array([88252747800, 26689733500, 20111518400, 18890357100, 15904033500])
+        df = stock.get_market_net_purchases_of_equities_by_ticker(
+            "20210115", "20210122", market="KOSDAQ"
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [88252747800, 26689733500, 20111518400, 18890357100, 15904033500]
+        )
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["236810", "347860", "235980", "039200", "000250"])
+        temp = df.index[0:5] == np.array(
+            ["236810", "347860", "235980", "039200", "000250"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_net_purchases_of_equities_is_same_in_konex(self):
@@ -334,14 +380,20 @@ class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
         # 246250     에스엘에스바이오       66974       89265        22291      694143600      927707350      233563750
         # 058970                 엠로       41594       54831        13237      687397650      916045050      228647400
         # 067370             선바이오       80726       92160        11434     1512812100     1726903850      214091750
-        df = stock.get_market_net_purchases_of_equities_by_ticker("20210115", "20210122", market="KONEX")
-        temp = df.iloc[0:5, -1] == np.array([691921700, 320659870, 233563750, 228647400, 214091750])
+        df = stock.get_market_net_purchases_of_equities_by_ticker(
+            "20210115", "20210122", market="KONEX"
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [691921700, 320659870, 233563750, 228647400, 214091750]
+        )
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["140610", "044990", "246250", "058970", "067370"])
+        temp = df.index[0:5] == np.array(
+            ["140610", "044990", "246250", "058970", "067370"]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
-class StockTradingVolumeByInvestorTest(unittest.TestCase):
+class TestStockTradingVolumeByInvestorTest:
     def test_trading_volume_is_same_0(self):
         #                 매도       매수    순매수
         # 투자자구분
@@ -350,8 +402,12 @@ class StockTradingVolumeByInvestorTest(unittest.TestCase):
         # 투신         2950680    1721970  -1228710
         # 사모          745727     696135    -49592
         # 은행           38675      46394      7719
-        df = stock.get_market_trading_volume_by_investor("20210115", "20210122", "005930")
-        temp = df.iloc[0:5, -1] == np.array([-3005309, -1247752, -1228710, -49592, 7719])
+        df = stock.get_market_trading_volume_by_investor(
+            "20210115", "20210122", "005930"
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [-3005309, -1247752, -1228710, -49592, 7719]
+        )
         self.assertEqual(temp.sum(), 5)
         temp = df.index[0:5] == np.array(["금융투자", "보험", "투신", "사모", "은행"])
         self.assertEqual(temp.sum(), 5)
@@ -364,8 +420,12 @@ class StockTradingVolumeByInvestorTest(unittest.TestCase):
         # 투신         46872846    34307243 -12565603
         # 사모         20780475    16342937  -4437538
         # 은행          2236667      632814  -1603853
-        df = stock.get_market_trading_volume_by_investor("20210115", "20210122", "KOSPI")
-        temp = df.iloc[0:5, -1] == np.array([-10271632, -7160467, -12565603, -4437538, -1603853])
+        df = stock.get_market_trading_volume_by_investor(
+            "20210115", "20210122", "KOSPI"
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [-10271632, -7160467, -12565603, -4437538, -1603853]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_trading_volume_is_same_2(self):
@@ -376,12 +436,16 @@ class StockTradingVolumeByInvestorTest(unittest.TestCase):
         # 투신          69348190     60601427   -8746763
         # 사모          31673292     26585281   -5088011
         # 은행          44279242     51690814    7411572
-        df = stock.get_market_trading_volume_by_investor("20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True)
-        temp = df.iloc[0:5, -1] == np.array([-196826641, -9722303, -8746763, -5088011, 7411572])
+        df = stock.get_market_trading_volume_by_investor(
+            "20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [-196826641, -9722303, -8746763, -5088011, 7411572]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
-class StockTradingValueByInvestorTest(unittest.TestCase):
+class TestStockTradingValueByInvestorTest:
     def test_trading_value_is_same_0(self):
         #                      매도            매수         순매수
         # 투자자구분
@@ -390,8 +454,12 @@ class StockTradingValueByInvestorTest(unittest.TestCase):
         # 투신         258073006600    150715203700  -107357802900
         # 사모          65167773900     60862926800    -4304847100
         # 은행           3369626100      4004806100      635180000
-        df = stock.get_market_trading_value_by_investor("20210115", "20210122", "005930")
-        temp = df.iloc[0:5, -1] == np.array([-271909817300, -108817092600, -107357802900, -4304847100, 635180000])
+        df = stock.get_market_trading_value_by_investor(
+            "20210115", "20210122", "005930"
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [-271909817300, -108817092600, -107357802900, -4304847100, 635180000]
+        )
         self.assertEqual(temp.sum(), 5)
         temp = df.index[0:5] == np.array(["금융투자", "보험", "투신", "사모", "은행"])
         self.assertEqual(temp.sum(), 5)
@@ -405,7 +473,9 @@ class StockTradingValueByInvestorTest(unittest.TestCase):
         # 사모          830445404788     665802837480  -164642567308
         # 은행           58624439870      37109603010   -21514836860
         df = stock.get_market_trading_value_by_investor("20210115", "20210122", "KOSPI")
-        temp = df.iloc[0:5, -1] == np.array([-532741458192, -352001699477, -369050124609, -164642567308, -21514836860])
+        temp = df.iloc[0:5, -1] == np.array(
+            [-532741458192, -352001699477, -369050124609, -164642567308, -21514836860]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_trading_value_is_same_2(self):
@@ -416,12 +486,16 @@ class StockTradingValueByInvestorTest(unittest.TestCase):
         # 투신         2235561259511    1799363743367  -436197516144
         # 사모          999084910863     846067212945  -153017697918
         # 은행          886226324790     936210985810    49984661020
-        df = stock.get_market_trading_value_by_investor("20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True)
-        temp = df.iloc[0:5, -1] == np.array([-979451750287, -461459825237, -436197516144, -153017697918, 49984661020])
+        df = stock.get_market_trading_value_by_investor(
+            "20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True
+        )
+        temp = df.iloc[0:5, -1] == np.array(
+            [-979451750287, -461459825237, -436197516144, -153017697918, 49984661020]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
-class StockTradingValueByDateTest(unittest.TestCase):
+class TestStockTradingValueByDateTest:
     def test_trading_value_is_same_0(self):
         #                 기관합계     기타법인          개인    외국인합계  전체
         # 날짜
@@ -431,9 +505,11 @@ class StockTradingValueByDateTest(unittest.TestCase):
         # 2021-01-20 -364476214000  22980632900  430115581000  -88619999900     0
         # 2021-01-21  -60637506300 -27880854000  250285510000 -161767149700     0
         df = stock.get_market_trading_value_by_date("20210115", "20210122", "005930")
-        temp = df.iloc[0:5, 0] == np.array([-440769209300, 42323535000, 95523053500, -364476214000, -60637506300])
+        temp = df.iloc[0:5, 0] == np.array(
+            [-440769209300, 42323535000, 95523053500, -364476214000, -60637506300]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         self.assertTrue(df.index[0] < df.index[-1])
 
@@ -446,9 +522,11 @@ class StockTradingValueByDateTest(unittest.TestCase):
         # 2021-01-20 -1234485992694  34510184945  1436793223994 -236817416245     0
         # 2021-01-21  -292666343147 -13168420832   -62476631241  368311395220     0
         df = stock.get_market_trading_value_by_date("20210115", "20210122", "KOSPI")
-        temp = df.iloc[0:5, 0] == np.array([-1414745885546, -278880716957, 593956459208, -1234485992694, -292666343147])
+        temp = df.iloc[0:5, 0] == np.array(
+            [-1414745885546, -278880716957, 593956459208, -1234485992694, -292666343147]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
     def test_trading_value_is_same_2(self):
@@ -459,24 +537,32 @@ class StockTradingValueByDateTest(unittest.TestCase):
         # 2021-01-19   544654406338  21787409868  -968965427363  402523611157     0
         # 2021-01-20 -1227642472619  32139813590  1444113501769 -248610842740     0
         # 2021-01-21  -284899892322 -19072459127   -61503500921  365475852370     0
-        df = stock.get_market_trading_value_by_date("20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True)
-        temp = df.iloc[0:5, 0] == np.array([-1536570309441, -601428111357, 544654406338, -1227642472619, -284899892322])
+        df = stock.get_market_trading_value_by_date(
+            "20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True
+        )
+        temp = df.iloc[0:5, 0] == np.array(
+            [-1536570309441, -601428111357, 544654406338, -1227642472619, -284899892322]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
     def test_trading_value_is_same_3(self):
         #                  기관합계     기타법인           개인    외국인합계  전체
         # 날짜
         # 2021-01-31 -4542136360183  98264910507  4883844366239 -439972916563     0
-        df = stock.get_market_trading_value_by_date("20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True, freq='m')
-        temp = df.iloc[0] == np.array([-4542136360183, 98264910507, 4883844366239, -439972916563, 0])
+        df = stock.get_market_trading_value_by_date(
+            "20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True, freq="m"
+        )
+        temp = df.iloc[0] == np.array(
+            [-4542136360183, 98264910507, 4883844366239, -439972916563, 0]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
 
-class StockTradingVolumeByDateTest(unittest.TestCase):
+class TestStockTradingVolumeByDateTest:
     def test_trading_value_is_same_0(self):
         #            기관합계 기타법인    개인 외국인합계  전체
         # 날짜
@@ -486,9 +572,11 @@ class StockTradingVolumeByDateTest(unittest.TestCase):
         # 2021-01-20 -4157919  262408  4917655   -1022144     0
         # 2021-01-21  -712099 -321732  2890389   -1856558     0
         df = stock.get_market_trading_volume_by_date("20210115", "20210122", "005930")
-        temp = df.iloc[0:5, 0] == np.array([-5006115, 505669, 1139258, -4157919, -712099])
+        temp = df.iloc[0:5, 0] == np.array(
+            [-5006115, 505669, 1139258, -4157919, -712099]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         self.assertTrue(df.index[0] < df.index[-1])
 
@@ -501,9 +589,11 @@ class StockTradingVolumeByDateTest(unittest.TestCase):
         # 2021-01-20 -23038683  -793906  31606917   -7774328     0
         # 2021-01-21 -18443990 -7082091   8365421   17160660     0
         df = stock.get_market_trading_volume_by_date("20210115", "20210122", "KOSPI")
-        temp = df.iloc[0:5, 0] == np.array([-20393142, -5700054, 7216278, -23038683, -18443990])
+        temp = df.iloc[0:5, 0] == np.array(
+            [-20393142, -5700054, 7216278, -23038683, -18443990]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
     def test_trading_value_is_same_2(self):
@@ -514,35 +604,48 @@ class StockTradingVolumeByDateTest(unittest.TestCase):
         # 2021-01-19 -41855511  4320588  31709703    5825220     0
         # 2021-01-20 -23038880 -2562184  38031657  -12430593     0
         # 2021-01-21 -38539026 -8798430  38195538    9141918     0
-        df = stock.get_market_trading_volume_by_date("20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True)
-        temp = df.iloc[0:5, 0] == np.array([-26571037, -65039501, -41855511, -23038880, -38539026])
+        df = stock.get_market_trading_volume_by_date(
+            "20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True
+        )
+        temp = df.iloc[0:5, 0] == np.array(
+            [-26571037, -65039501, -41855511, -23038880, -38539026]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
     def test_trading_value_is_same_3(self):
         #              기관합계 기타법인       개인  외국인합계  전체
         # 날짜
         # 2021-01-31 -258249088  1167570  261341862    -4260344     0
-        df = stock.get_market_trading_volume_by_date("20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True, freq='m')
+        df = stock.get_market_trading_volume_by_date(
+            "20210115", "20210122", "KOSPI", etf=True, etn=True, elw=True, freq="m"
+        )
         temp = df.iloc[0] == np.array([-258249088, 1167570, 261341862, -4260344, 0])
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
-class StockExhaustionRatesOfForeignInvestmentByTickerTest(unittest.TestCase):
+
+class TestStockExhaustionRatesOfForeignInvestmentByTickerTest:
     def test_kospi_for_specific_day(self):
-        df = stock.get_exhaustion_rates_of_foreign_investment_by_ticker('20210118', "KOSPI")
+        df = stock.get_exhaustion_rates_of_foreign_investment_by_ticker(
+            "20210118", "KOSPI"
+        )
         self.assertEqual(len(df), 917)
-        df = stock.get_exhaustion_rates_of_foreign_investment_by_ticker('20210118', "KOSPI", True)
+        df = stock.get_exhaustion_rates_of_foreign_investment_by_ticker(
+            "20210118", "KOSPI", True
+        )
         self.assertEqual(len(df), 18)
 
 
-class StockExhaustionRatesOfForeignInvestmentByDateTest(unittest.TestCase):
+class TestStockExhaustionRatesOfForeignInvestmentByDateTest:
     def test_kospi_for_specific_day(self):
-        df = stock.get_exhaustion_rates_of_foreign_investment_by_date("20200120", "20200120", "005930")
+        df = stock.get_exhaustion_rates_of_foreign_investment_by_date(
+            "20200120", "20200120", "005930"
+        )
         self.assertEqual(len(df), 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

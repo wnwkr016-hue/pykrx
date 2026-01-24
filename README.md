@@ -17,6 +17,50 @@ from pykrx import stock
 from pykrx import bond
 ```
 
+### 1.2 개발 환경 설정 (Development environment)
+
+로컬 개발 및 테스트를 위한 권장 절차입니다. 프로젝트 루트에서 아래 명령을 실행하세요.
+
+```bash
+# 가상환경 생성 및 활성화
+python3 -m venv .venv
+source .venv/bin/activate  # macOS / Linux
+.venv\Scripts\activate     # Windows (PowerShell)
+
+# 개발 의존성 포함 설치
+pip install -e .[dev]
+
+# pre-commit 훅 설치
+pre-commit install
+
+# Ruff로 코드 자동수정(포맷/정리) - 선택사항
+ruff check --fix .
+ruff format .
+
+# 전체 테스트 실행
+pytest -v
+```
+
+**설명:**
+- `pip install -e .[dev]` — 개발 모드 설치 + dev 의존성(pytest, ruff, pre-commit) 자동 설치
+- 모든 설정은 `pyproject.toml`에서 관리됩니다
+- VS Code 사용 시: `ruff` 익스텐션 설치하면 저장 시 자동 포맷 적용
+
+### 지원 Python 버전
+
+이 프로젝트는 다음 Python 버전을 지원합니다:
+
+- 런타임 최소 요구: `>=3.10` (pyproject.toml 기준)
+- 권장 개발/사용 버전: `3.11` (테스트 및 CI의 메인스트림)
+- CI에서 정기적으로 테스트하는 버전: `3.10`, `3.11`, `3.12`, `3.13`, `3.14` (Ubuntu 및 멀티OS 일부)
+
+참고:
+- 본 프로젝트는 Python 3.8/3.9의 유지 관리를 중단했습니다. 과거 환경을 지원해야 한다면 별도 브랜치나 포크에서 관리하세요.
+- 일부 서드파티 패키지(예: `tts 0.22.0`)는 오래된 `pandas` 버전을 요구할 수 있습니다. 이런 경우 별도의 가상환경을 만들어 충돌을 회피하세요.
+- Python 3.14에 도입된 multiprocessing 관련 최적화(PEP 649/749)를 활용하려면 CI에서 3.14 테스트가 통과해야 하며, 런타임 분기 처리가 필요할 수 있습니다.
+
+
+
 ## 2. API 설명
 
 ### 2.1 Stock 모듈

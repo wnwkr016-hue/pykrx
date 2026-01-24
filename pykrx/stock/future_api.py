@@ -1,7 +1,9 @@
-from pykrx.website import krx
 import datetime
-from pandas import DataFrame
 import re
+
+from pandas import DataFrame
+
+from pykrx.website import krx
 
 yymmdd = re.compile(r"\d{4}[-/]?\d{2}[-/]?\d{2}")
 
@@ -74,16 +76,16 @@ def get_future_ohlcv(*args, **kwargs):
     """  # pylint: disable=line-too-long # noqa: E501
 
     dates = list(filter(yymmdd.match, [str(x) for x in args]))
-    if len(dates) == 2 or ('fromdate' in kwargs and
-                           'todate' in kwargs):
+    if len(dates) == 2 or ("fromdate" in kwargs and "todate" in kwargs):
         raise NotImplementedError
         # return get_future_ohlcv_by_date(*args, **kwargs)
     else:
         return get_future_ohlcv_by_ticker(*args, **kwargs)
 
 
-def get_future_ohlcv_by_ticker(date: str, prod: str, alternative: bool = False,
-                               prev: bool = True) -> DataFrame:
+def get_future_ohlcv_by_ticker(
+    date: str, prod: str, alternative: bool = False, prev: bool = True
+) -> DataFrame:
     if isinstance(date, datetime.datetime):
         date = krx.datetime2string(date)
 
@@ -91,8 +93,7 @@ def get_future_ohlcv_by_ticker(date: str, prod: str, alternative: bool = False,
 
     df = krx.get_future_ohlcv_by_ticker(date, prod)
     if df.empty and alternative:
-        target_date = krx.get_nearest_business_day_in_a_week(
-            date=date, prev=prev)
+        target_date = krx.get_nearest_business_day_in_a_week(date=date, prev=prev)
         df = krx.get_future_ohlcv_by_ticker(target_date, prod)
     return df
 
@@ -104,5 +105,5 @@ if __name__ == "__main__":
     # names = get_future_ticker_name('KRDRVFUEST')
     # print(names)
 
-    df = get_future_ohlcv('20220902', 'KRDRVFUEST')
+    df = get_future_ohlcv("20220902", "KRDRVFUEST")
     print(df)

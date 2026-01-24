@@ -1,19 +1,21 @@
-from .market import *
-from .etx import *
-from .bond import *
-from .future import *
 import datetime
 
-def datetime2string(dt, freq='d'):
-    if freq.upper() == 'Y':
+from .bond import *
+from .etx import *
+from .future import *
+from .market import *
+
+
+def datetime2string(dt, freq="d"):
+    if freq.upper() == "Y":
         return dt.strftime("%Y")
-    elif freq.upper() == 'M':
+    elif freq.upper() == "M":
         return dt.strftime("%Y%m")
     else:
         return dt.strftime("%Y%m%d")
 
-def get_nearest_business_day_in_a_week(date: str = None, prev: bool = True) \
-        -> str:
+
+def get_nearest_business_day_in_a_week(date: str = None, prev: bool = True) -> str:
     """인접한 영업일을 조회한다.
 
     Args:

@@ -1,2 +1,2 @@
-from .wrap import *
 from .ticker import *
+from .wrap import *

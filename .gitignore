@@ -1,6 +1,8 @@
 .idea
-.vscode
 *.pyc
+
+# Archive / deprecated files
+archive/
 
 # Distribution / packaging
 dist
@@ -23,3 +25,18 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Testing / Coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/

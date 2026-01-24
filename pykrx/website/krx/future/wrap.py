@@ -1,9 +1,8 @@
-from pykrx.website.comm import dataframe_empty_handler
-from pykrx.website.krx.future.core import (
-    파생상품검색, 전종목시세
-)
 import numpy as np
 from pandas import DataFrame
+
+from pykrx.website.comm import dataframe_empty_handler
+from pykrx.website.krx.future.core import 전종목시세, 파생상품검색
 
 
 def get_future_ticker_and_name() -> DataFrame:
@@ -40,28 +39,51 @@ def get_future_ohlcv_by_ticker(date: str, prod: str) -> DataFrame:
         401S9TCS  코스피200 SP 2209-2312 (주간)    0.00  0.00    0.00    0.00    0.00    0.00       0               0
         401S9V6S  코스피200 SP 2209-2406 (주간)    0.00  0.00    0.00    0.00    0.00    0.00       0               0
         401S9VCS  코스피200 SP 2209-2412 (주간)    0.00  0.00    0.00    0.00    0.00    0.00       0               0
-        """  # pylint: disable=line-too-long # noqa: E501
+    """  # pylint: disable=line-too-long # noqa: E501
     df = 전종목시세().fetch(date, prod)
-    df = df[['ISU_SRT_CD', 'ISU_NM', 'TDD_CLSPRC', 'CMPPREVDD_PRC',
-             'TDD_OPNPRC', 'TDD_HGPRC', 'TDD_LWPRC', 'SETL_PRC', 'ACC_TRDVOL',
-             'ACC_TRDVAL']]
-    df.columns = ['종목코드', '종목명', '종가', '대비', '시가', '고가', '저가',
-                  '현물가', '거래량', '거래대금']
-    df = df.set_index('종목코드')
+    df = df[
+        [
+            "ISU_SRT_CD",
+            "ISU_NM",
+            "TDD_CLSPRC",
+            "CMPPREVDD_PRC",
+            "TDD_OPNPRC",
+            "TDD_HGPRC",
+            "TDD_LWPRC",
+            "SETL_PRC",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+        ]
+    ]
+    df.columns = [
+        "종목코드",
+        "종목명",
+        "종가",
+        "대비",
+        "시가",
+        "고가",
+        "저가",
+        "현물가",
+        "거래량",
+        "거래대금",
+    ]
+    df = df.set_index("종목코드")
 
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('', '0', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "종가": np.float64,
-        "대비": np.float64,
-        "시가": np.float64,
-        "고가": np.float64,
-        "저가": np.float64,
-        "현물가": np.float64,
-        "거래량": np.int32,
-        "거래대금": np.int64
-    })
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("", "0", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "종가": np.float64,
+            "대비": np.float64,
+            "시가": np.float64,
+            "고가": np.float64,
+            "저가": np.float64,
+            "현물가": np.float64,
+            "거래량": np.int32,
+            "거래대금": np.int64,
+        }
+    )
     return df
 
 
