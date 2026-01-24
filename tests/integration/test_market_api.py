@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from pykrx import stock
 import pandas as pd
 import numpy as np
@@ -6,7 +6,7 @@ import numpy as np
 # flake8: noqa
 
 
-class StockBusinessDaysTest(unittest.TestCase):
+class TestStockBusinessDaysTest:
     def test_every_month(self):
         year = 2020
         for month in range(1, 13):
@@ -22,7 +22,7 @@ class StockBusinessDaysTest(unittest.TestCase):
         self.assertIsInstance(days[0], pd._libs.tslibs.timestamps.Timestamp)
 
 
-class StockOhlcvByDateTest(unittest.TestCase):
+class TestStockOhlcvByDateTest:
     def test_ohlcv_simple_call(self):
         df = stock.get_market_ohlcv_by_date("20210118", "20210126", "005930")
         #               시가    고가    저가    종가      거래량         거래대금  등락률
@@ -70,7 +70,7 @@ class StockOhlcvByDateTest(unittest.TestCase):
         self.assertEqual(df.loc["2018-05-04"]["시가"], 53000)
 
 
-class StockOhlcvByTickerTest(unittest.TestCase):
+class TestStockOhlcvByTickerTest:
     def test_ohlcv_for_a_day(self):
         df = stock.get_market_ohlcv_by_ticker("20210122")
         #           시가    고가    저가    종가   거래량     거래대금     등락률
@@ -113,7 +113,7 @@ class StockOhlcvByTickerTest(unittest.TestCase):
         self.assertTrue((df0 == df1).all(axis=None))
 
 
-class StockPriceChangeByTicker(unittest.TestCase):
+class TestStockPriceChangeByTicker:
     def test_with_valid_business_days(self):
         df = stock.get_market_price_change_by_ticker(
             fromdate="20210104", todate="20210111"
@@ -189,7 +189,7 @@ class StockPriceChangeByTicker(unittest.TestCase):
         self.assertEqual(samsung_not_adjusted["종가"], 51900)
 
 
-class StockFundamentalByDate(unittest.TestCase):
+class TestStockFundamentalByDate:
     def test_with_valid_business_days(self):
         df = stock.get_market_fundamental_by_date("20210104", "20210108", "005930")
         #               BPS    PER   PBR   EPS   DIV   DPS
@@ -243,7 +243,7 @@ class StockFundamentalByDate(unittest.TestCase):
         self.assertEqual(temp.sum(), 6)
 
 
-class StockFundamentalByTicker(unittest.TestCase):
+class TestStockFundamentalByTicker:
     def test_with_valid_a_business_day(self):
         # 20210108 friday
         df = stock.get_market_fundamental_by_ticker("20210108")
@@ -268,7 +268,7 @@ class StockFundamentalByTicker(unittest.TestCase):
         self.assertEqual(len(df), 895)
 
 
-class StockMarketCapByTicker(unittest.TestCase):
+class TestStockMarketCapByTicker:
     def test_with_a_businessday(self):
         df = stock.get_market_cap_by_ticker("20210104")
         #           종가         시가총액    거래량       거래대금  상장주식수
@@ -291,7 +291,7 @@ class StockMarketCapByTicker(unittest.TestCase):
         self.assertEqual(len(result), 0)
 
 
-class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
+class TestStockNetPurchasesOfEquitiesByTickerTest:
     def test_net_purchases_of_equities_is_same_0(self):
         df = stock.get_market_net_purchases_of_equities_by_ticker(
             "20210115", "20210122"
@@ -393,7 +393,7 @@ class StockNetPurchasesOfEquitiesByTickerTest(unittest.TestCase):
         self.assertEqual(temp.sum(), 5)
 
 
-class StockTradingVolumeByInvestorTest(unittest.TestCase):
+class TestStockTradingVolumeByInvestorTest:
     def test_trading_volume_is_same_0(self):
         #                 매도       매수    순매수
         # 투자자구분
@@ -445,7 +445,7 @@ class StockTradingVolumeByInvestorTest(unittest.TestCase):
         self.assertEqual(temp.sum(), 5)
 
 
-class StockTradingValueByInvestorTest(unittest.TestCase):
+class TestStockTradingValueByInvestorTest:
     def test_trading_value_is_same_0(self):
         #                      매도            매수         순매수
         # 투자자구분
@@ -495,7 +495,7 @@ class StockTradingValueByInvestorTest(unittest.TestCase):
         self.assertEqual(temp.sum(), 5)
 
 
-class StockTradingValueByDateTest(unittest.TestCase):
+class TestStockTradingValueByDateTest:
     def test_trading_value_is_same_0(self):
         #                 기관합계     기타법인          개인    외국인합계  전체
         # 날짜
@@ -562,7 +562,7 @@ class StockTradingValueByDateTest(unittest.TestCase):
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
 
-class StockTradingVolumeByDateTest(unittest.TestCase):
+class TestStockTradingVolumeByDateTest:
     def test_trading_value_is_same_0(self):
         #            기관합계 기타법인    개인 외국인합계  전체
         # 날짜
@@ -627,7 +627,7 @@ class StockTradingVolumeByDateTest(unittest.TestCase):
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
 
-class StockExhaustionRatesOfForeignInvestmentByTickerTest(unittest.TestCase):
+class TestStockExhaustionRatesOfForeignInvestmentByTickerTest:
     def test_kospi_for_specific_day(self):
         df = stock.get_exhaustion_rates_of_foreign_investment_by_ticker(
             "20210118", "KOSPI"
@@ -639,7 +639,7 @@ class StockExhaustionRatesOfForeignInvestmentByTickerTest(unittest.TestCase):
         self.assertEqual(len(df), 18)
 
 
-class StockExhaustionRatesOfForeignInvestmentByDateTest(unittest.TestCase):
+class TestStockExhaustionRatesOfForeignInvestmentByDateTest:
     def test_kospi_for_specific_day(self):
         df = stock.get_exhaustion_rates_of_foreign_investment_by_date(
             "20200120", "20200120", "005930"

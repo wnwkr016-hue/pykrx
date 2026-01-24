@@ -19,9 +19,38 @@ pre-commit install
 
 3) 테스트 실행
 
+**테스트 구조**
+- `tests/integration/`: VCR cassette를 사용한 통합 테스트 (기본)
+- `tests/live/`: 실제 서버 interface 점검 테스트 (CI에서 제외)
+- `tests/cassettes/`: HTTP 요청/응답이 녹화된 YAML 파일들
+
+**기본 테스트 실행**
 ```bash
-pytest -v
+pytest -v                           # integration 테스트 실행
+pytest tests/integration/ -v        # 명시적으로 integration만 실행
+pytest tests/live/ -v               # live 테스트 (실제 네트워크 호출)
 ```
+
+**VCR Cassette 사용법**
+
+Integration 테스트는 `vcrpy`를 사용하여 HTTP 요청을 녹화/재생합니다:
+
+```python
+import pytest
+from pykrx import stock
+
+class TestStockApi:
+    @pytest.mark.cassette('stock/ohlcv_20210104.yaml')
+    def test_get_ohlcv(self, use_cassette):
+        df = stock.get_market_ohlcv_by_date("20210104", "20210108", "005930")
+        assert len(df) > 0
+```
+
+- 첫 실행: 실제 HTTP 요청 발생 → `tests/cassettes/`에 녹화
+- 이후 실행: 녹화된 cassette 재생 (네트워크 불필요)
+- Cassette 재녹화: 해당 YAML 파일을 삭제하고 다시 테스트 실행
+
+**Cassette 파일은 Git에 커밋되어야 합니다** (CI에서 네트워크 없이 실행하기 위해)
 
 4) 포맷팅 및 린트
 

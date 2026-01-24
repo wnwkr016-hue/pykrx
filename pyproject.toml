@@ -40,6 +40,8 @@ dev = [
     "pytest-cov>=4.0.0",
     "ruff>=0.9.0", # 최신 3.14 대응을 위해 버전 상향
     "pre-commit>=3.5.0",
+    "vcrpy>=4.1.0",
+    "pytest-vcr>=1.0.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -74,7 +76,7 @@ quote-style = "double"
 
 # pytest configuration
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/integration"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -86,7 +88,9 @@ addopts = [
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
+    "integration: marks tests as integration tests (default)",
+    "live: marks tests as live server checks (not run in CI)",
+    "cassette: specify VCR cassette file for test",
 ]
 
 # Coverage configuration (optional)

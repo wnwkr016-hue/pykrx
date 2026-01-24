@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from pykrx import stock
 import pandas as pd
 import numpy as np
@@ -6,7 +6,7 @@ import numpy as np
 # flake8: noqa
 
 
-class IndexTickerList(unittest.TestCase):
+class TestIndexTickerList:
     def test_index_list_for_a_specific_day(self):
         tickers = stock.get_index_ticker_list("20210118")
         self.assertIsInstance(tickers, list)
@@ -40,7 +40,7 @@ class IndexTickerList(unittest.TestCase):
         self.assertEqual(name, "코스피 고배당 50")
 
 
-class IndexPortfolioDepositFile(unittest.TestCase):
+class TestIndexPortfolioDepositFile:
     def test_pdf_list_width_default_params(self):
         tickers = stock.get_index_portfolio_deposit_file("1001")
         self.assertIsInstance(tickers, list)
@@ -70,7 +70,7 @@ class IndexPortfolioDepositFile(unittest.TestCase):
         self.assertEqual(len(tickers), 0)
 
 
-class IndexOhlcvByDate(unittest.TestCase):
+class TestIndexOhlcvByDate:
     def test_ohlcv_simple(self):
         df = stock.get_index_ohlcv_by_date("20210101", "20210130", "1001")
         #                시가     고가     저가     종가      거래량         거래대금
@@ -122,7 +122,7 @@ class IndexOhlcvByDate(unittest.TestCase):
         self.assertEqual(temp.sum(), 5)
 
 
-class IndexListingDate(unittest.TestCase):
+class TestIndexListingDate:
     def test_listing_info(self):
         df = stock.get_index_listing_date()
         #                        기준시점    발표시점   기준지수  종목수
@@ -139,7 +139,7 @@ class IndexListingDate(unittest.TestCase):
         self.assertEqual(df.loc["코스피", "기준지수"], 100.0)
 
 
-class IndexPriceChangeByTicker(unittest.TestCase):
+class TestIndexPriceChangeByTicker:
     def test_with_valid_business_days(self):
         df = stock.get_index_price_change_by_ticker("20210104", "20210108")
         #                           시가      종가     등락률      거래량         거래대금
