@@ -10,7 +10,6 @@ os = platform.system()
 
 if os == "Darwin":
     plt.rc("font", family="AppleGothic")
-
 else:
     with resources.path("pykrx", "NanumBarunGothic.ttf") as font_path:
         fe = fm.FontEntry(fname=str(font_path), name="NanumBarunGothic")
@@ -21,4 +20,11 @@ plt.rcParams["axes.unicode_minus"] = False
 
 __all__ = ["bond", "stock"]
 
-__version__ = "1.0.51"
+# Version is automatically managed by setuptools_scm from git tags
+try:
+    from importlib.metadata import version
+
+    __version__ = version("pykrx")
+except Exception:
+    # Fallback for development/editable installs without metadata
+    __version__ = "0.0.0+unknown"

@@ -134,3 +134,12 @@ class 개별종목시세(KrxWebIo):
 - `pykrx/website/krx/{market,etx,bond,items,future}/`: KRX data sources
 - `pykrx/website/naver/`: Naver Finance data source
 - `tests/`: Unit tests organized by API domain
+
+## Directory Responsibilities
+- `pykrx/stock`, `pykrx/bond`: Public API layer — contains user-facing functions, handles parameter validation (including decorators), date formatting, and other common pre-processing. These modules call the `wrap` layer and expose results as `pandas.DataFrame` to consumers.
+- `pykrx/website/comm`: Network/HTTP common layer — provides `Get`/`Post` clients and is responsible for common headers, `requests.Session` reuse, timeout and retry policies, and exception handling for HTTP interactions.
+- `pykrx/website/krx/*/core.py`: Data-source network layer — `core.py` modules communicate directly with KRX APIs. Each core class typically inherits from `KrxWebIo` or `KrxFutureIo`, defines the `bld` endpoint identifier, and performs POST/GET requests returning raw JSON/dict responses.
+- `pykrx/website/krx/*/wrap.py`: Data cleaning and interface layer — transforms raw responses from `core` into `pandas.DataFrame`, normalizes column names, casts types, sets indices, handles missing values, and provides a clean, stable interface for library consumers.
+- `pykrx/website/naver`: Naver Finance-specific scraping and parsing logic — contains HTML parsing, selector management, and adaptation code for site-structure changes.
+- `pykrx/website/path_bld_information.json`: BLD endpoint mapping registry — centralizes endpoint identifiers and descriptions so `core` classes can reference them instead of hardcoding values.
+- `tests/`: Unit and integration tests — tests should mock network calls to ensure deterministic, network-independent test runs.
