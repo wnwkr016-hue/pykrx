@@ -5,6 +5,7 @@ import numpy as np
 # pylint: disable-all
 # flake8: noqa
 
+
 class ShortStatusByDate(unittest.TestCase):
     def test_with_a_business_day(self):
         df = stock.get_shorting_status_by_date("20210104", "20210108", "005930")
@@ -62,7 +63,9 @@ class ShortVolumeByTicker(unittest.TestCase):
         self.assertIsInstance(df, pd.DataFrame)
         temp = df.iloc[0:5, 0] == np.array([32, 79, 18502, 96, 1889])
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["095570", "006840", "027410", "282330", "138930"])
+        temp = df.index[0:5] == np.array(
+            ["095570", "006840", "027410", "282330", "138930"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday(self):
@@ -81,7 +84,9 @@ class ShortVolumeByTicker(unittest.TestCase):
         # 211270     0  424730  0.000000
         # 035760  1042  156069  0.669922
         self.assertIsInstance(df, pd.DataFrame)
-        temp = df.index[:5] == np.array(["060310", "054620", "265520", "211270", "035760"])
+        temp = df.index[:5] == np.array(
+            ["060310", "054620", "265520", "211270", "035760"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_in_kosdaq_1(self):
@@ -94,7 +99,9 @@ class ShortVolumeByTicker(unittest.TestCase):
         # 211270     0  424730  0.000000
         # 035760  1042  156069  0.669922
         self.assertIsInstance(df, pd.DataFrame)
-        temp = df.index[:5] == np.array(["060310", "054620", "265520", "211270", "035760"])
+        temp = df.index[:5] == np.array(
+            ["060310", "054620", "265520", "211270", "035760"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_in_konex(self):
@@ -107,7 +114,9 @@ class ShortVolumeByTicker(unittest.TestCase):
         # 076340    0  7933  0.0
         # 329050    0     0  0.0
         self.assertIsInstance(df, pd.DataFrame)
-        temp = df.index[:5] == np.array(["112190", "224880", "183410", "076340", "329050"])
+        temp = df.index[:5] == np.array(
+            ["112190", "224880", "183410", "076340", "329050"]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
@@ -122,9 +131,13 @@ class ShortValueByTicker(unittest.TestCase):
         # 282330   14928000  13018465500  0.109985
         # 138930   10635610   6658032800  0.160034
         self.assertIsInstance(df, pd.DataFrame)
-        temp = df.iloc[0:5, 0] == np.array([134240, 2377900, 108713300, 14928000, 10635610])
+        temp = df.iloc[0:5, 0] == np.array(
+            [134240, 2377900, 108713300, 14928000, 10635610]
+        )
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["095570", "006840", "027410", "282330", "138930"])
+        temp = df.index[0:5] == np.array(
+            ["095570", "006840", "027410", "282330", "138930"]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday(self):
@@ -178,14 +191,18 @@ class ShortValueByDate(unittest.TestCase):
         # 2021-01-08     534000  5083939899952  0.00
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([771889500, 14011100, 80855100, 63634800, 534000])
+        temp = df.iloc[0:5, 0] == np.array(
+            [771889500, 14011100, 80855100, 63634800, 534000]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_0(self):
         # 20210103 sunday / 20210108 friday
         df = stock.get_shorting_value_by_date("20210103", "20210108", "005930")
         self.assertIsInstance(df, pd.DataFrame)
-        temp = df.iloc[0:5, 0] == np.array([771889500, 14011100, 80855100, 63634800, 534000])
+        temp = df.iloc[0:5, 0] == np.array(
+            [771889500, 14011100, 80855100, 63634800, 534000]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_1(self):
@@ -193,7 +210,9 @@ class ShortValueByDate(unittest.TestCase):
         df = stock.get_shorting_value_by_date("20210103", "20210109", "005930")
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([771889500, 14011100, 80855100, 63634800, 534000])
+        temp = df.iloc[0:5, 0] == np.array(
+            [771889500, 14011100, 80855100, 63634800, 534000]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
@@ -209,7 +228,9 @@ class ShortInvestorVolumeByDate(unittest.TestCase):
         # 2020-01-10  5129724  141885   7849543   0  13121152
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([3783324, 3627906, 5161993, 5265706, 5129724])
+        temp = df.iloc[0:5, 0] == np.array(
+            [3783324, 3627906, 5161993, 5265706, 5129724]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_0(self):
@@ -217,7 +238,9 @@ class ShortInvestorVolumeByDate(unittest.TestCase):
         df = stock.get_shorting_investor_volume_by_date("20200105", "20200110")
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([3783324, 3627906, 5161993, 5265706, 5129724])
+        temp = df.iloc[0:5, 0] == np.array(
+            [3783324, 3627906, 5161993, 5265706, 5129724]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_1(self):
@@ -225,7 +248,9 @@ class ShortInvestorVolumeByDate(unittest.TestCase):
         df = stock.get_shorting_investor_volume_by_date("20200105", "20200111")
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([3783324, 3627906, 5161993, 5265706, 5129724])
+        temp = df.iloc[0:5, 0] == np.array(
+            [3783324, 3627906, 5161993, 5265706, 5129724]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
@@ -241,7 +266,9 @@ class ShortInvestorValueByDate(unittest.TestCase):
         # 2020-01-10  185561759364  3182000295  165327866557   0  354071626216
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([135954452715, 140062017520, 175731372983, 189541838466, 185561759364])
+        temp = df.iloc[0:5, 0] == np.array(
+            [135954452715, 140062017520, 175731372983, 189541838466, 185561759364]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_0(self):
@@ -249,7 +276,9 @@ class ShortInvestorValueByDate(unittest.TestCase):
         df = stock.get_shorting_investor_value_by_date("20200105", "20200110")
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([135954452715, 140062017520, 175731372983, 189541838466, 185561759364])
+        temp = df.iloc[0:5, 0] == np.array(
+            [135954452715, 140062017520, 175731372983, 189541838466, 185561759364]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_1(self):
@@ -257,7 +286,9 @@ class ShortInvestorValueByDate(unittest.TestCase):
         df = stock.get_shorting_investor_value_by_date("20200105", "20200111")
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([135954452715, 140062017520, 175731372983, 189541838466, 185561759364])
+        temp = df.iloc[0:5, 0] == np.array(
+            [135954452715, 140062017520, 175731372983, 189541838466, 185561759364]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
@@ -320,7 +351,9 @@ class ShortBalanceByTicker(unittest.TestCase):
         self.assertIsInstance(df, pd.DataFrame)
         temp = df.iloc[0:5, 0] == np.array([33055, 4575, 68060, 4794, 596477])
         self.assertEqual(temp.sum(), 5)
-        temp = df.index[0:5] == np.array(["095570", "006840", "027410", "282330", "138930"])
+        temp = df.index[0:5] == np.array(
+            ["095570", "006840", "027410", "282330", "138930"]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
@@ -336,23 +369,29 @@ class ShortBalanceByDate(unittest.TestCase):
         # 2020-01-10  5489240  5969782550  326609780000  3.552021e+14  0.090027
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([5630893, 5169745, 5224233, 5387073, 5489240])
+        temp = df.iloc[0:5, 0] == np.array(
+            [5630893, 5169745, 5224233, 5387073, 5489240]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_0(self):
         df = stock.get_shorting_balance_by_date("20200105", "20200110", "005930")
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([5630893, 5169745, 5224233, 5387073, 5489240])
+        temp = df.iloc[0:5, 0] == np.array(
+            [5630893, 5169745, 5224233, 5387073, 5489240]
+        )
         self.assertEqual(temp.sum(), 5)
 
     def test_with_holiday_1(self):
         df = stock.get_shorting_balance_by_date("20200105", "20200111", "005930")
         self.assertIsInstance(df, pd.DataFrame)
         self.assertTrue(df.index[0] < df.index[-1])
-        temp = df.iloc[0:5, 0] == np.array([5630893, 5169745, 5224233, 5387073, 5489240])
+        temp = df.iloc[0:5, 0] == np.array(
+            [5630893, 5169745, 5224233, 5387073, 5489240]
+        )
         self.assertEqual(temp.sum(), 5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

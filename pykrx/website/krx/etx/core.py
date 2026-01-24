@@ -1,5 +1,6 @@
-from pykrx.website.krx.krxio import KrxWebIo
 from pandas import DataFrame
+
+from pykrx.website.krx.krxio import KrxWebIo
 
 
 class 상장종목검색(KrxWebIo):
@@ -26,7 +27,7 @@ class 상장종목검색(KrxWebIo):
                 4  KR7278420005     278420      ARIRANG ESG우수기업
         """
         result = self.read(mktsel=market, searchText=name)
-        return DataFrame(result['block1'])
+        return DataFrame(result["block1"])
 
 
 class ETF_전종목기본종목(KrxWebIo):
@@ -48,7 +49,7 @@ class ETF_전종목기본종목(KrxWebIo):
                 4        KR7287300008     287300                         KB KBSTAR 200건설증권상장지수투자신탁(주식)                   KBSTAR 200건설                    KB KBSTAR 200 Constructions ETF  2017/12/22                     코스피 200 건설                KRX                일반 (1)                    실물            국내             주식       560,000   케이비자산운용   20,000       0.190                    비과세
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read()
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class ETN_전종목기본종목(KrxWebIo):
@@ -70,7 +71,7 @@ class ETN_전종목기본종목(KrxWebIo):
                 4    KRG581100069     580006               KB증권 KB KTOP30 파생결합증권(상장지수증권) 제6호           KB KTOP30 ETN                             KB KB KTOP30 ETN 6  2016/10/27  2026/10/23                 KTOP 30              KRX                 일반            ETN            국내             주식   5,000,000    KB증권       0.39      비과세
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read()
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class ELW_전종목기본종목(KrxWebIo):
@@ -92,7 +93,7 @@ class ELW_전종목기본종목(KrxWebIo):
                 4     KRA5811A0A44     58F407    KB증권(주) 주식워런트증권 제F407호      KBF407LG화학콜    KB SECURITIES ELW F407  2020/04/28  2021/02/10  2021/02/16          주식       LG화학  16,000,000    KB증권        0.002         콜      유럽형  322,500  KB증권          15           현금결제
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read()
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class 개별종목시세_ETF(KrxWebIo):
@@ -117,7 +118,7 @@ class 개별종목시세_ETF(KrxWebIo):
                 3  2021/01/14     43,835          2            30   -0.07  43,942.97     43,725    43,995    43,585    196,552   8,602,863,505  861,357,750,000          845,902,227,451  19,650,000    코스피 200         429.85           2          0.53       -0.12
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read(isuCd=isin, strtDd=strtDd, endDd=endDd)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class 전종목시세_ETF(KrxWebIo):
@@ -142,7 +143,7 @@ class 전종목시세_ETF(KrxWebIo):
                 4       278420      ARIRANG ESG우수기업      8,950           145          1    1.65    8,952.56      8,815     8,975     8,810     39,513    352,947,304    4,027,500,000                        0     450,000    WISE ESG우수기업 지수       1,210.07         19.83           1     1.67
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read(trdDd=date)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class 전종목등락률_ETF(KrxWebIo):
@@ -170,7 +171,7 @@ class 전종목등락률_ETF(KrxWebIo):
                     4       278420       ARIRANG ESG우수기업    9,095    9,385          1     290    3.19      9,114      84,463,155
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read(strtDd=strtDd, endDd=endDd)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class PDF(KrxWebIo):
@@ -197,7 +198,7 @@ class PDF(KrxWebIo):
                 NOTE: 웹 서버가 COMPST_ISU_CD에 ISIN과 축향형을 혼합해서 반환한다. Why?>
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read(trdDd=date, isuCd=isin)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class 추적오차율추이(KrxWebIo):
@@ -224,7 +225,7 @@ class 추적오차율추이(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isin)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class 괴리율추이(KrxWebIo):
@@ -251,7 +252,7 @@ class 괴리율추이(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class ETF_투자자별거래실적_기간합계(KrxWebIo):
@@ -285,7 +286,7 @@ class ETF_투자자별거래실적_기간합계(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(strtDd=strtDd, endDd=endDd)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class ETF_투자자별거래실적_일별추이(KrxWebIo):
@@ -293,8 +294,9 @@ class ETF_투자자별거래실적_일별추이(KrxWebIo):
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT04802"
 
-    def fetch(self, strtDd: str, endDd: str, inqCondTpCd1: int,
-              inqCondTpCd2: int) -> DataFrame:
+    def fetch(
+        self, strtDd: str, endDd: str, inqCondTpCd1: int, inqCondTpCd2: int
+    ) -> DataFrame:
         """[13106] 투자자별 거래실적
            당일자 최종 매매내역은 오후 6시 이후에 제공됩니다.
 
@@ -316,9 +318,12 @@ class ETF_투자자별거래실적_일별추이(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(
-            strtDd=strtDd, endDd=endDd, inqCondTpCd1=inqCondTpCd1,
-            inqCondTpCd2=inqCondTpCd2)
-        return DataFrame(result['output'])
+            strtDd=strtDd,
+            endDd=endDd,
+            inqCondTpCd1=inqCondTpCd1,
+            inqCondTpCd2=inqCondTpCd2,
+        )
+        return DataFrame(result["output"])
 
 
 class ETF_투자자별거래실적_개별종목_기간합계(KrxWebIo):
@@ -356,7 +361,7 @@ class ETF_투자자별거래실적_개별종목_기간합계(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class ETF_투자자별거래실적_개별종목_일별추이(KrxWebIo):
@@ -364,8 +369,9 @@ class ETF_투자자별거래실적_개별종목_일별추이(KrxWebIo):
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT04902"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str, inqCondTpCd1: int,
-              inqCondTpCd2: int) -> DataFrame:
+    def fetch(
+        self, strtDd: str, endDd: str, isuCd: str, inqCondTpCd1: int, inqCondTpCd2: int
+    ) -> DataFrame:
         """[13207] 투자자별 거래실적(개별종목)
            당일자 최종 매매내역은 오후 6시 이후에 제공됩니다.
 
@@ -391,9 +397,13 @@ class ETF_투자자별거래실적_개별종목_일별추이(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(
-            inqCondTpCd1=inqCondTpCd1, inqCondTpCd2=inqCondTpCd2,
-            isuCd=isuCd, strtDd=strtDd, endDd=endDd)
-        return DataFrame(result['output'])
+            inqCondTpCd1=inqCondTpCd1,
+            inqCondTpCd2=inqCondTpCd2,
+            isuCd=isuCd,
+            strtDd=strtDd,
+            endDd=endDd,
+        )
+        return DataFrame(result["output"])
 
 
 class ETN_투자자별거래실적_개별종목_기간합계(KrxWebIo):
@@ -431,7 +441,7 @@ class ETN_투자자별거래실적_개별종목_기간합계(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class ETN_투자자별거래실적_개별종목_일별추이(KrxWebIo):
@@ -439,8 +449,9 @@ class ETN_투자자별거래실적_개별종목_일별추이(KrxWebIo):
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT07002"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str, inqCondTpCd1: int,
-              inqCondTpCd2: int) -> DataFrame:
+    def fetch(
+        self, strtDd: str, endDd: str, isuCd: str, inqCondTpCd1: int, inqCondTpCd2: int
+    ) -> DataFrame:
         """[13207] 투자자별 거래실적(개별종목)
            당일자 최종 매매내역은 오후 6시 이후에 제공됩니다.
 
@@ -463,21 +474,30 @@ class ETN_투자자별거래실적_개별종목_일별추이(KrxWebIo):
         """  # pylint: disable=line-too-long # noqa: E501
 
         result = self.read(
-            inqCondTpCd1=inqCondTpCd1, inqCondTpCd2=inqCondTpCd2,
-            isuCd=isuCd, strtDd=strtDd, endDd=endDd)
-        return DataFrame(result['output'])
+            inqCondTpCd1=inqCondTpCd1,
+            inqCondTpCd2=inqCondTpCd2,
+            isuCd=isuCd,
+            strtDd=strtDd,
+            endDd=endDd,
+        )
+        return DataFrame(result["output"])
 
 
 if __name__ == "__main__":
     import pandas as pd
-    pd.set_option('display.width', None)
+
+    pd.set_option("display.width", None)
     # print(상장종목검색().fetch("ETF"))
     # print(전종목등락률_ETF().fetch("20210325", "20210402"))
     # print(투자자별거래실적_기간합계().fetch("20220415", "20220422"))
     # print(투자자별거래실적_개별종목_기간합계().fetch("20220908", "20220916", "KRG580000112"))
     # print(ETN_투자자별거래실적_개별종목_일별추이().fetch("20220908", "20220916", "KRG580000112", 1, 1))
     # print(ETF_투자자별거래실적_개별종목_일별추이().fetch("20230421", "20230428", "KR7069500007", 1, 1))
-    print(ETF_투자자별거래실적_개별종목_기간합계().fetch("20230421", "20230428", "KR7069500007"))
+    print(
+        ETF_투자자별거래실적_개별종목_기간합계().fetch(
+            "20230421", "20230428", "KR7069500007"
+        )
+    )
     # print(개별종목시세_ETF().fetch("20210111", "20210119", "KR7152100004"))
     # print(전종목시세_ETF().fetch("20210119"))
     # print(PDF().fetch("20210119", "KR7152100004"))

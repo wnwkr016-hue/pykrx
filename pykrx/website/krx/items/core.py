@@ -1,7 +1,7 @@
 import pandas as pd
-from pykrx.website.krx.krxio import KrxWebIo
-import datetime
 from pandas import DataFrame
+
+from pykrx.website.krx.krxio import KrxWebIo
 
 
 class 전종목_시세_검색(KrxWebIo):
@@ -30,16 +30,16 @@ class 전종목_시세_검색(KrxWebIo):
         Returns:
             DataFrame: 금 전종목 시세를 반환합니다.
             ISU_SRT_CD        ISU_CD MKT_ID       ISU_ABBRV TDD_CLSPRC FLUC_TP_CD  \
-        0   04020000  KRD040200002    CMD     금 99.99_1Kg    193,890          2   
-        1   04020100  KRD040201000    CMD  미니금 99.99_100g    197,280          2   
+        0   04020000  KRD040200002    CMD     금 99.99_1Kg    193,890          2
+        1   04020100  KRD040201000    CMD  미니금 99.99_100g    197,280          2
 
         CMPPREVDD_PRC FLUC_RT TDD_OPNPRC TDD_HGPRC TDD_LWPRC ACC_TRDVOL  \
-        0          -460   -0.31    196,010   196,010   192,380    535,259   
-        1        -1,260    0.64    200,620   201,590   196,990      7,393   
+        0          -460   -0.31    196,010   196,010   192,380    535,259
+        1        -1,260    0.64    200,620   201,590   196,990      7,393
 
-                ACC_TRDVAL  
-        0  104,044,785,230  
-        1    1,473,701,700  
+                ACC_TRDVAL
+        0  104,044,785,230
+        1    1,473,701,700
         """
         result = self.read(
             local=locale,

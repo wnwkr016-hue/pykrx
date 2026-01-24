@@ -1,6 +1,7 @@
-from pykrx.website.krx.krxio import KrxFutureIo, KrxWebIo
 import pandas as pd
 from pandas import DataFrame
+
+from pykrx.website.krx.krxio import KrxWebIo
 
 
 class 파생상품검색(KrxWebIo):
@@ -10,38 +11,38 @@ class 파생상품검색(KrxWebIo):
 
     def fetch(self) -> DataFrame:
         """
-            > 파생상품검색().fetch()
+        > 파생상품검색().fetch()
 
-                                           name
-            value
-            KRDRVFUK2I        KOSPI 200 Futures
-            KRDRVFUMKI   MINI KOSPI 200 Futures
-            KRDRVOPK2I         KOSPI 200 Option
-            KRDRVOPWKI  KOSPI 200 Weekly Option
-            KRDRVOPMKI    MINI KOSPI 200 Option
-            KRDRVFUKQI        KOSDAQ150 Futures
-            KRDRVOPKQI         KOSDAQ150 Option
-            KRDRVFUXI3           KRX300 Futures
-            KRDRVFUVKI          V-KOSPI Futures
-            KRDRVFUXAT     Secotr Index Futures
-            KRDRVFUBM3             KTB3 Futures
-            KRDRVFUBM5             KTB5 Futures
-            KRDRVFUBMA            KTB10 Futures
-            KRDRVFUB3A    3y-10y KTB sp Futures
-            KRDRVFURFR          3M KOFR Futures
-            KRDRVFUUSD              USD Futures
-            KRDRVFXUSD   US Dollar Flex Futures
-            KRDRVFUJPY              JPY Futures
-            KRDRVFUEUR              EUR Futures
-            KRDRVFUCNH              CNH Futures
-            KRDRVFUKGD             GOLD Futures
-            KRDRVFUEQU     Single Stock Futures
-            KRDRVOPEQU     Single Stock Options
-            KRDRVFUEST     EURO STOXX50 Futures
+                                       name
+        value
+        KRDRVFUK2I        KOSPI 200 Futures
+        KRDRVFUMKI   MINI KOSPI 200 Futures
+        KRDRVOPK2I         KOSPI 200 Option
+        KRDRVOPWKI  KOSPI 200 Weekly Option
+        KRDRVOPMKI    MINI KOSPI 200 Option
+        KRDRVFUKQI        KOSDAQ150 Futures
+        KRDRVOPKQI         KOSDAQ150 Option
+        KRDRVFUXI3           KRX300 Futures
+        KRDRVFUVKI          V-KOSPI Futures
+        KRDRVFUXAT     Secotr Index Futures
+        KRDRVFUBM3             KTB3 Futures
+        KRDRVFUBM5             KTB5 Futures
+        KRDRVFUBMA            KTB10 Futures
+        KRDRVFUB3A    3y-10y KTB sp Futures
+        KRDRVFURFR          3M KOFR Futures
+        KRDRVFUUSD              USD Futures
+        KRDRVFXUSD   US Dollar Flex Futures
+        KRDRVFUJPY              JPY Futures
+        KRDRVFUEUR              EUR Futures
+        KRDRVFUCNH              CNH Futures
+        KRDRVFUKGD             GOLD Futures
+        KRDRVFUEQU     Single Stock Futures
+        KRDRVOPEQU     Single Stock Options
+        KRDRVFUEST     EURO STOXX50 Futures
         """
         data = self.read(secugrpId="ALL")
-        df = DataFrame(data['output'])
-        return df.set_index('value')
+        df = DataFrame(data["output"])
+        return df.set_index("value")
 
 
 class 전종목기본정보(KrxWebIo):
@@ -72,16 +73,17 @@ class 전종목기본정보(KrxWebIo):
                 11  KR4401S9V6S0   401S9V6S  코스피200 SP 2209-2406  SP 2209-2406  KOSPI 200 SP 2209-2406  2022/06/10  2022/09/08  2022/09/13  지수(Index)  250,000          -      .00
                 12  KR4401S9VCS2   401S9VCS  코스피200 SP 2209-2412  SP 2209-2412  KOSPI 200 SP 2209-2412  2022/06/10  2022/09/08  2022/09/13  지수(Index)  250,000          -      .00
         """  # pylint: disable=line-too-long # noqa: E501
-        if (prodId == "KRDRVFUEQU") or (prodId == "KRDRVOPEQU") or (prodId == "KRDRVFUXAT"):
+        if (
+            (prodId == "KRDRVFUEQU")
+            or (prodId == "KRDRVOPEQU")
+            or (prodId == "KRDRVFUXAT")
+        ):
             # Single Stock Futures
             # Single Stock Options
             # Secotr Index Futures
-            subProdId = str(prodId)           
-        
-            result = self.read(
-                prodId=prodId, 
-                subProdId=subProdId,
-                csvslx_isNo=False)
+            subProdId = str(prodId)
+
+            result = self.read(prodId=prodId, subProdId=subProdId, csvslx_isNo=False)
         else:
             result = self.read(prodId=prodId, csvslx_isNo=False)
         return DataFrame(result["output"])
@@ -119,8 +121,7 @@ class 전종목시세(KrxWebIo):
                     12  KR4401S9VCS2   401S9VCS  코스피200 SP 2209-2412 (주간)          -          0             -          -         -         -   312.92     0.00          0                   0              -         FU
         """  # pylint: disable=line-too-long # noqa: E501
         result = self.read(trdDd=trdDd, prodId=prodId, mktTpCd="T", rghtTpCd="T")
-        return DataFrame(result['output'])
-
+        return DataFrame(result["output"])
 
 
 if __name__ == "__main__":

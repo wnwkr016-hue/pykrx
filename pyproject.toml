@@ -65,8 +65,9 @@ ignore = ["E501"]
 fixable = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"] # unused imports in __init__.py
+"__init__.py" = ["F401", "F403", "F405"] # wildcard imports in __init__.py
 "tests/**/*.py" = ["S101"] # allow assert statements in tests
+"pykrx/stock/stock_api.py" = ["F811"] # multipledispatch function overloading
 
 [tool.ruff.format]
 quote-style = "double"

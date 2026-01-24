@@ -1,9 +1,12 @@
-from pykrx.website.naver.core import Sise
 import xml.etree.ElementTree as et
-from pandas import DataFrame
-import pandas as pd
-import numpy as np
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+from pandas import DataFrame
+
+from pykrx.website.naver.core import Sise
+
 
 # fromdate, todate, isin
 def get_market_ohlcv_by_date(fromdate, todate, ticker):
@@ -17,17 +20,17 @@ def get_market_ohlcv_by_date(fromdate, todate, ticker):
 
     result = []
     try:
-        for node in et.fromstring(xml).iter(tag='item'):
-            row = node.get('data')
+        for node in et.fromstring(xml).iter(tag="item"):
+            row = node.get("data")
             result.append(row.split("|"))
 
-        cols = ['날짜', '시가', '고가', '저가', '종가', '거래량']
+        cols = ["날짜", "시가", "고가", "저가", "종가", "거래량"]
         df = DataFrame(result, columns=cols)
-        df = df.set_index('날짜')
-        df.index = pd.to_datetime(df.index, format='%Y%m%d')
+        df = df.set_index("날짜")
+        df.index = pd.to_datetime(df.index, format="%Y%m%d")
         df = df.astype(np.int64)
-        close_1d = df['종가'].shift(1)
-        df['등락률'] = (df['종가'] - close_1d) / close_1d * 100
+        close_1d = df["종가"].shift(1)
+        df["등락률"] = (df["종가"] - close_1d) / close_1d * 100
         return df.loc[(strtd <= df.index) & (df.index <= lastd)]
     except et.ParseError:
         return DataFrame()

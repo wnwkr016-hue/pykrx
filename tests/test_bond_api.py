@@ -5,6 +5,7 @@ import numpy as np
 # pylint: disable-all
 # flake8: noqa
 
+
 class BondOtcTreasuryYiledTestByTicker(unittest.TestCase):
     def test_holiday(self):
         df = bond.get_otc_treasury_yields("20220202")
@@ -22,6 +23,7 @@ class BondOtcTreasuryYiledTestByTicker(unittest.TestCase):
         # 국고채 10년   2.619  0.053
         self.assertAlmostEqual(df.iloc[0, 0], 1.467)
         self.assertAlmostEqual(df.iloc[1, 0], 1.995)
+
 
 class BondOtcTreasuryYiledTestByDate(unittest.TestCase):
     def test_business_day(self):

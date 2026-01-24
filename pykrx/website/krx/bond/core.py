@@ -1,5 +1,6 @@
-from pykrx.website.krx.krxio import KrxWebIo
 from pandas import DataFrame
+
+from pykrx.website.krx.krxio import KrxWebIo
 
 
 class MKD40038(KrxWebIo):
@@ -12,17 +13,15 @@ class MKD40038(KrxWebIo):
     def fetch(self, fromdate, todate):
         try:
             result = self.post(fr_work_dt=fromdate, to_work_dt=todate)
-            if len(result['block1']) == 0:
+            if len(result["block1"]) == 0:
                 return None
 
-            df = DataFrame(result['block1'])
-            df = df[['trd_dd', 'prc_yd1', 'prc_yd2', 'prc_yd3', 'prc_yd4',
-                     'prc_yd5']]
-            df.columns = ['일자', '3년물', '5년물', '10년물', '20년물',
-                          '30년물']
-            df.set_index('일자', inplace=True)
+            df = DataFrame(result["block1"])
+            df = df[["trd_dd", "prc_yd1", "prc_yd2", "prc_yd3", "prc_yd4", "prc_yd5"]]
+            df.columns = ["일자", "3년물", "5년물", "10년물", "20년물", "30년물"]
+            df.set_index("일자", inplace=True)
 
-            df.index = [x.replace('/', '-') for x in df.index]
+            df.index = [x.replace("/", "-") for x in df.index]
             df = df.astype(float)
             df.index.name = "지표수익률"
             return df
@@ -58,7 +57,7 @@ class 전종목_장외채권수익률(KrxWebIo):
 
         """
         result = self.read(inqTpCd="T", trdDd=trdDd)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])
 
 
 class 개별추이_장외채권수익률(KrxWebIo):
@@ -99,14 +98,16 @@ class 개별추이_장외채권수익률(KrxWebIo):
             3   2022/01/26          1.455   0.002
             4   2022/01/25          1.453   0.015
         """
-        result = self.read(inqTpCd="E", strtDd=strtDd, endDd=endDd,
-                           bndKindTpCd=bndKindTpCd)
-        return DataFrame(result['output'])
+        result = self.read(
+            inqTpCd="E", strtDd=strtDd, endDd=endDd, bndKindTpCd=bndKindTpCd
+        )
+        return DataFrame(result["output"])
 
 
 if __name__ == "__main__":
     import pandas as pd
-    pd.set_option('display.width', None)
+
+    pd.set_option("display.width", None)
 
     # df = 전종목_장외채권수익률().fetch("20220203")
     df = 개별추이_장외채권수익률().fetch("20220103", "20220203", "3006")

@@ -1,31 +1,50 @@
-from pykrx.website.comm import dataframe_empty_handler
-from pykrx.website.krx.market.ticker import get_stock_ticker_isin
-from pykrx.website.krx.market.core import (
-    개별종목시세, 전종목등락률, PER_PBR_배당수익률_전종목,
-    PER_PBR_배당수익률_개별, 전종목시세, 외국인보유량_개별추이,
-    외국인보유량_전종목, 투자자별_순매수상위종목,
-    투자자별_거래실적_개별종목_기간합계,
-    투자자별_거래실적_개별종목_일별추이_일반,
-    투자자별_거래실적_개별종목_일별추이_상세,
-    투자자별_거래실적_전체시장_기간합계, 업종분류현황,
-    투자자별_거래실적_전체시장_일별추이_일반, 개별종목_공매도_거래_전종목,
-    투자자별_거래실적_전체시장_일별추이_상세, 개별종목_공매도_종합정보,
-    개별종목_공매도_거래_개별추이, 투자자별_공매도_거래, 전종목_공매도_잔고,
-    개별종목_공매도_잔고, 공매도_거래상위_50종목, 공매도_잔고상위_50종목,
-    전체지수기본정보, 개별지수시세, 전체지수등락률, 전체지수시세, 지수구성종목,
-    PER_PBR_배당수익률_전지수, PER_PBR_배당수익률_개별지수, 기업주요변동사항
-)
-
 import numpy as np
 import pandas as pd
-from pandas import Series, DataFrame
+from pandas import DataFrame, Series
+
+from pykrx.website.comm import dataframe_empty_handler
+from pykrx.website.krx.market.core import (
+    PER_PBR_배당수익률_개별,
+    PER_PBR_배당수익률_개별지수,
+    PER_PBR_배당수익률_전종목,
+    PER_PBR_배당수익률_전지수,
+    개별종목_공매도_거래_개별추이,
+    개별종목_공매도_거래_전종목,
+    개별종목_공매도_잔고,
+    개별종목_공매도_종합정보,
+    개별종목시세,
+    개별지수시세,
+    공매도_거래상위_50종목,
+    공매도_잔고상위_50종목,
+    기업주요변동사항,
+    업종분류현황,
+    외국인보유량_개별추이,
+    외국인보유량_전종목,
+    전종목_공매도_잔고,
+    전종목등락률,
+    전종목시세,
+    전체지수기본정보,
+    전체지수등락률,
+    전체지수시세,
+    지수구성종목,
+    투자자별_거래실적_개별종목_기간합계,
+    투자자별_거래실적_개별종목_일별추이_상세,
+    투자자별_거래실적_개별종목_일별추이_일반,
+    투자자별_거래실적_전체시장_기간합계,
+    투자자별_거래실적_전체시장_일별추이_상세,
+    투자자별_거래실적_전체시장_일별추이_일반,
+    투자자별_공매도_거래,
+    투자자별_순매수상위종목,
+)
+from pykrx.website.krx.market.ticker import get_stock_ticker_isin
 
 
 # -----------------------------------------------------------------------------
 # stock
 @dataframe_empty_handler
-def get_market_ohlcv_by_date(fromdate: str, todate: str, ticker: str,
-                             adjusted: bool = True) -> DataFrame:
+def get_market_ohlcv_by_date(
+    fromdate: str, todate: str, ticker: str, adjusted: bool = True
+) -> DataFrame:
     """일자별로 정렬된 특정 종목의 OHLCV
 
     Args:
@@ -51,18 +70,44 @@ def get_market_ohlcv_by_date(fromdate: str, todate: str, ticker: str,
     adjusted = 2 if adjusted else 1
     df = 개별종목시세().fetch(fromdate, todate, isin, adjusted)
 
-    df = df[['TRD_DD', 'TDD_OPNPRC', 'TDD_HGPRC', 'TDD_LWPRC', 'TDD_CLSPRC',
-             'ACC_TRDVOL', 'ACC_TRDVAL', 'FLUC_RT']]
-    df.columns = ['날짜', '시가', '고가', '저가', '종가', '거래량', '거래대금',
-                  '등락률']
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('', '0')
-    df = df.astype({"시가": np.int32, "고가": np.int32, "저가": np.int32,
-                    "종가": np.int32, "거래량": np.int32, "거래대금": np.int64,
-                    "등락률": np.float32})
+    df = df[
+        [
+            "TRD_DD",
+            "TDD_OPNPRC",
+            "TDD_HGPRC",
+            "TDD_LWPRC",
+            "TDD_CLSPRC",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+            "FLUC_RT",
+        ]
+    ]
+    df.columns = [
+        "날짜",
+        "시가",
+        "고가",
+        "저가",
+        "종가",
+        "거래량",
+        "거래대금",
+        "등락률",
+    ]
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("", "0")
+    df = df.astype(
+        {
+            "시가": np.int32,
+            "고가": np.int32,
+            "저가": np.int32,
+            "종가": np.int32,
+            "거래량": np.int32,
+            "거래대금": np.int64,
+            "등락률": np.float32,
+        }
+    )
     return df.sort_index()
 
 
@@ -85,38 +130,56 @@ def get_market_ohlcv_by_ticker(date: str, market: str = "KOSPI") -> DataFrame:
             265520  22150  23100  22050  22400  255846  5798313650
     """
 
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     df = 전종목시세().fetch(date, market2mktid[market])
-    df = df[['ISU_SRT_CD', 'TDD_OPNPRC', 'TDD_HGPRC', 'TDD_LWPRC',
-             'TDD_CLSPRC', 'ACC_TRDVOL', 'ACC_TRDVAL', 'FLUC_RT', 'MKTCAP']]
-    df.columns = ['티커', '시가', '고가', '저가', '종가', '거래량', '거래대금',
-                  '등락률', '시가총액']
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('', '0')
-    df = df.set_index('티커')
-    df = df.astype({
-        "시가": np.int32,
-        "고가": np.int32,
-        "저가": np.int32,
-        "종가": np.int32,
-        "거래량": np.int32,
-        "거래대금": np.int64,
-        "등락률": np.float32,
-        "시가총액": np.int64
-    })
+    df = df[
+        [
+            "ISU_SRT_CD",
+            "TDD_OPNPRC",
+            "TDD_HGPRC",
+            "TDD_LWPRC",
+            "TDD_CLSPRC",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+            "FLUC_RT",
+            "MKTCAP",
+        ]
+    ]
+    df.columns = [
+        "티커",
+        "시가",
+        "고가",
+        "저가",
+        "종가",
+        "거래량",
+        "거래대금",
+        "등락률",
+        "시가총액",
+    ]
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("", "0")
+    df = df.set_index("티커")
+    df = df.astype(
+        {
+            "시가": np.int32,
+            "고가": np.int32,
+            "저가": np.int32,
+            "종가": np.int32,
+            "거래량": np.int32,
+            "거래대금": np.int64,
+            "등락률": np.float32,
+            "시가총액": np.int64,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
-def get_market_cap_by_date(fromdate: str, todate: str, ticker: str,
-                           adjusted: bool = True) -> DataFrame:
+def get_market_cap_by_date(
+    fromdate: str, todate: str, ticker: str, adjusted: bool = True
+) -> DataFrame:
     """일자별로 정렬된 시가총액
 
     Args:
@@ -138,20 +201,21 @@ def get_market_cap_by_date(fromdate: str, todate: str, ticker: str,
     isin = get_stock_ticker_isin(ticker)
     adjusted = 2 if adjusted else 1
     df = 개별종목시세().fetch(fromdate, todate, isin, adjusted)
-    df = df[['TRD_DD', 'MKTCAP', 'ACC_TRDVOL', 'ACC_TRDVAL', 'LIST_SHRS']]
-    df.columns = ['날짜', '시가총액', '거래량', '거래대금', '상장주식수']
+    df = df[["TRD_DD", "MKTCAP", "ACC_TRDVOL", "ACC_TRDVAL", "LIST_SHRS"]]
+    df.columns = ["날짜", "시가총액", "거래량", "거래대금", "상장주식수"]
 
-    df = df.replace('/', '', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.set_index('날짜')
+    df = df.replace("/", "", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.set_index("날짜")
     df = df.astype(np.int64)
-    df.index = pd.to_datetime(df.index, format='%Y%m%d')
+    df.index = pd.to_datetime(df.index, format="%Y%m%d")
     return df.sort_index()
 
 
 @dataframe_empty_handler
-def get_market_cap_by_ticker(date: str, market: str = "KOSPI",
-                             ascending: bool = False) -> DataFrame:
+def get_market_cap_by_ticker(
+    date: str, market: str = "KOSPI", ascending: bool = False
+) -> DataFrame:
     """티커별로 정렬된 시가총액
 
     Args:
@@ -171,29 +235,23 @@ def get_market_cap_by_ticker(date: str, market: str = "KOSPI",
             068270  316000   42640845660000    918369   42640845660000   134939385
     """  # pylint: disable=line-too-long # noqa: E501
 
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     df = 전종목시세().fetch(date, market2mktid[market])
-    df = df[['ISU_SRT_CD', 'TDD_CLSPRC', 'MKTCAP', 'ACC_TRDVOL', 'ACC_TRDVAL',
-             'LIST_SHRS']]
-    df.columns = ['티커', '종가', '시가총액', '거래량', '거래대금',
-                  '상장주식수']
+    df = df[
+        ["ISU_SRT_CD", "TDD_CLSPRC", "MKTCAP", "ACC_TRDVOL", "ACC_TRDVAL", "LIST_SHRS"]
+    ]
+    df.columns = ["티커", "종가", "시가총액", "거래량", "거래대금", "상장주식수"]
 
-    df = df.set_index('티커')
-    df = df.replace(r'\W', '', regex=True)
-    df = df.replace('', 0)
+    df = df.set_index("티커")
+    df = df.replace(r"\W", "", regex=True)
+    df = df.replace("", 0)
     df = df.astype(np.int64)
-    return df.sort_values('시가총액', ascending=ascending)
+    return df.sort_values("시가총액", ascending=ascending)
 
 
 @dataframe_empty_handler
-def get_market_fundamental_by_ticker(date: str, market: str = "KOSPI") \
-        -> DataFrame:
+def get_market_fundamental_by_ticker(date: str, market: str = "KOSPI") -> DataFrame:
     """티커별로 정리된 특정 일자의 BPS/PER/PBR/배당수익률
 
     Args:
@@ -211,35 +269,33 @@ def get_market_fundamental_by_ticker(date: str, market: str = "KOSPI") \
             054620   APS홀딩스   13639   0.10  0.32  46508  0.00    0
     """
 
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
     df = PER_PBR_배당수익률_전종목().fetch(date, market2mktid[market])
 
-    df = df[['ISU_SRT_CD', 'BPS', 'PER', 'PBR', 'EPS', 'DVD_YLD', 'DPS']]
-    df.columns = ['티커', 'BPS', 'PER', 'PBR', 'EPS', 'DIV', 'DPS']
-    df.set_index('티커', inplace=True)
+    df = df[["ISU_SRT_CD", "BPS", "PER", "PBR", "EPS", "DVD_YLD", "DPS"]]
+    df.columns = ["티커", "BPS", "PER", "PBR", "EPS", "DIV", "DPS"]
+    df.set_index("티커", inplace=True)
 
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('', '0', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "BPS": np.int32,
-        "PER": np.float64,
-        "PBR": np.float64,
-        "EPS": np.int32,
-        "DIV": np.float64,
-        "DPS": np.int32
-    })
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("", "0", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "BPS": np.int32,
+            "PER": np.float64,
+            "PBR": np.float64,
+            "EPS": np.int32,
+            "DIV": np.float64,
+            "DPS": np.int32,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
-def get_market_fundamental_by_date(fromdate: str, todate: str, ticker: str) \
-        -> DataFrame:
+def get_market_fundamental_by_date(
+    fromdate: str, todate: str, ticker: str
+) -> DataFrame:
     """날짜로 정렬된 종목별 BPS/PER/PBR/배당수익률
 
     Args:
@@ -263,18 +319,25 @@ def get_market_fundamental_by_date(fromdate: str, todate: str, ticker: str) \
 
     df = PER_PBR_배당수익률_개별().fetch(fromdate, todate, "ALL", isin)
 
-    df = df[['TRD_DD', 'BPS', 'PER', 'PBR', 'EPS', 'DVD_YLD', 'DPS']]
-    df.columns = ['날짜', 'BPS', 'PER', 'PBR', 'EPS', 'DIV', 'DPS']
+    df = df[["TRD_DD", "BPS", "PER", "PBR", "EPS", "DVD_YLD", "DPS"]]
+    df.columns = ["날짜", "BPS", "PER", "PBR", "EPS", "DIV", "DPS"]
 
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('/', '', regex=True)
-    df = df.replace('', '0', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.astype({"BPS": np.int32, "PER": np.float64,
-                    "PBR": np.float32, "EPS": np.int32, "DIV": np.float32,
-                    "DPS": np.int32}, )
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y%m%d')
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("/", "", regex=True)
+    df = df.replace("", "0", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "BPS": np.int32,
+            "PER": np.float64,
+            "PBR": np.float32,
+            "EPS": np.int32,
+            "DIV": np.float32,
+            "DPS": np.int32,
+        },
+    )
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y%m%d")
     return df.sort_index()
 
 
@@ -298,24 +361,19 @@ def get_market_ticker_and_name(date: str, market: str = "KOSPI") -> Series:
             282330    BGF리테일
     """
 
-    market2code = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2code = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     df = 전종목시세().fetch(date, market2code[market])
-    df = df[['ISU_SRT_CD', 'ISU_ABBRV']]
-    df.columns = ['티커', '종목명']
-    df = df.set_index('티커')
-    return df['종목명']
+    df = df[["ISU_SRT_CD", "ISU_ABBRV"]]
+    df.columns = ["티커", "종목명"]
+    df = df.set_index("티커")
+    return df["종목명"]
 
 
 @dataframe_empty_handler
-def get_market_price_change_by_ticker(fromdate: str, todate: str,
-                                      market: str = "KOSPI",
-                                      adjusted: bool = True) -> DataFrame:
+def get_market_price_change_by_ticker(
+    fromdate: str, todate: str, market: str = "KOSPI", adjusted: bool = True
+) -> DataFrame:
     """입력된 기간동안의 전 종목 수익률 반환
 
     Args:
@@ -327,38 +385,54 @@ def get_market_price_change_by_ticker(fromdate: str, todate: str,
     Returns:
         DataFrame:
     """
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     adjusted = 2 if adjusted else 1
 
     df = 전종목등락률().fetch(fromdate, todate, market2mktid[market], adjusted)
-    df = df[['ISU_ABBRV', 'ISU_SRT_CD', 'BAS_PRC', 'TDD_CLSPRC',
-             'CMPPREVDD_PRC', 'FLUC_RT', 'ACC_TRDVOL', 'ACC_TRDVAL']]
-    df.columns = ['종목명', '티커', '시가', '종가', '변동폭',
-                  '등락률', '거래량', '거래대금']
-    df = df.set_index('티커')
+    df = df[
+        [
+            "ISU_ABBRV",
+            "ISU_SRT_CD",
+            "BAS_PRC",
+            "TDD_CLSPRC",
+            "CMPPREVDD_PRC",
+            "FLUC_RT",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+        ]
+    ]
+    df.columns = [
+        "종목명",
+        "티커",
+        "시가",
+        "종가",
+        "변동폭",
+        "등락률",
+        "거래량",
+        "거래대금",
+    ]
+    df = df.set_index("티커")
 
-    df = df.replace(r'[^-.\w]', '', regex=True)
-    df = df.replace(r'\-$', '', regex=True)
-    df = df.replace('', '0')
-    df = df.astype({
-        "시가": np.int32,
-        "종가": np.int32,
-        "변동폭": np.int32,
-        "등락률": np.float64,
-        "거래량": np.int64,
-        "거래대금": np.int64
-    })
+    df = df.replace(r"[^-.\w]", "", regex=True)
+    df = df.replace(r"\-$", "", regex=True)
+    df = df.replace("", "0")
+    df = df.astype(
+        {
+            "시가": np.int32,
+            "종가": np.int32,
+            "변동폭": np.int32,
+            "등락률": np.float64,
+            "거래량": np.int64,
+            "거래대금": np.int64,
+        }
+    )
     return df
 
 
 def get_exhaustion_rates_of_foreign_investment_by_date(
-        fromdate: str, todate: str, ticker: str) -> DataFrame:
+    fromdate: str, todate: str, ticker: str
+) -> DataFrame:
     """[12023] 외국인보유량(개별종목) - 개별추이
 
     Args:
@@ -381,28 +455,38 @@ def get_exhaustion_rates_of_foreign_investment_by_date(
 
     df = 외국인보유량_개별추이().fetch(fromdate, todate, isin)
 
-    df = df[['TRD_DD', 'LIST_SHRS', 'FORN_HD_QTY', 'FORN_SHR_RT',
-             'FORN_ORD_LMT_QTY', 'FORN_LMT_EXHST_RT']]
-    df.columns = ['날짜', '상장주식수', '보유수량', '지분율', '한도수량',
-                  '한도소진률']
+    df = df[
+        [
+            "TRD_DD",
+            "LIST_SHRS",
+            "FORN_HD_QTY",
+            "FORN_SHR_RT",
+            "FORN_ORD_LMT_QTY",
+            "FORN_LMT_EXHST_RT",
+        ]
+    ]
+    df.columns = ["날짜", "상장주식수", "보유수량", "지분율", "한도수량", "한도소진률"]
 
-    df = df.replace('/', '', regex=True)
-    df = df.replace('', '0', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "상장주식수": np.int64,
-        "보유수량": np.int64,
-        "지분율": np.float16,
-        "한도수량": np.int64,
-        "한도소진률": np.float16
-    })
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y%m%d')
+    df = df.replace("/", "", regex=True)
+    df = df.replace("", "0", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "상장주식수": np.int64,
+            "보유수량": np.int64,
+            "지분율": np.float16,
+            "한도수량": np.int64,
+            "한도소진률": np.float16,
+        }
+    )
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y%m%d")
     return df.sort_index()
 
 
 def get_exhaustion_rates_of_foreign_investment_by_ticker(
-        date: str, market: str, balance_limit: bool) -> DataFrame:
+    date: str, market: str, balance_limit: bool
+) -> DataFrame:
     """[12023] 외국인보유량(개별종목) - 전종목
 
     Args:
@@ -423,36 +507,41 @@ def get_exhaustion_rates_of_foreign_investment_by_ticker(
             020560  223235294   13871465   6.210938  111595323  12.429688
     """
 
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     balance_limit = 1 if balance_limit else 0
     df = 외국인보유량_전종목().fetch(date, market2mktid[market], balance_limit)
 
-    df = df[['ISU_SRT_CD', 'LIST_SHRS', 'FORN_HD_QTY', 'FORN_SHR_RT',
-             'FORN_ORD_LMT_QTY', 'FORN_LMT_EXHST_RT']]
-    df.columns = ['티커', '상장주식수', '보유수량', '지분율', '한도수량',
-                  '한도소진률']
-    df = df.replace('', '0', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "상장주식수": np.int64,
-        "보유수량": np.int64,
-        "지분율": np.float16,
-        "한도수량": np.int64,
-        "한도소진률": np.float16
-    })
-    df = df.set_index('티커')
+    df = df[
+        [
+            "ISU_SRT_CD",
+            "LIST_SHRS",
+            "FORN_HD_QTY",
+            "FORN_SHR_RT",
+            "FORN_ORD_LMT_QTY",
+            "FORN_LMT_EXHST_RT",
+        ]
+    ]
+    df.columns = ["티커", "상장주식수", "보유수량", "지분율", "한도수량", "한도소진률"]
+    df = df.replace("", "0", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "상장주식수": np.int64,
+            "보유수량": np.int64,
+            "지분율": np.float16,
+            "한도수량": np.int64,
+            "한도소진률": np.float16,
+        }
+    )
+    df = df.set_index("티커")
     return df.sort_index()
 
 
 @dataframe_empty_handler
 def get_market_trading_value_and_volume_on_ticker_by_investor(
-        fromdate: str, todate: str, ticker: str) -> DataFrame:
+    fromdate: str, todate: str, ticker: str
+) -> DataFrame:
     """[12009] 투자자별 거래실적 기간합계(개별 종목)
 
     다음 메뉴의 내용을 스크래핑 함
@@ -486,19 +575,25 @@ def get_market_trading_value_and_volume_on_ticker_by_investor(
     isin = get_stock_ticker_isin(ticker)
     df = 투자자별_거래실적_개별종목_기간합계().fetch(fromdate, todate, isin)
 
-    df = df.set_index('INVST_TP_NM')
-    df.index.name = '투자자구분'
-    df.columns = pd.MultiIndex.from_product([['거래량', '거래대금'],
-                                             ['매도', '매수', '순매수']])
-    df = df.replace(r'[^-\w]', '', regex=True)
-    df = df.replace('', '0')
+    df = df.set_index("INVST_TP_NM")
+    df.index.name = "투자자구분"
+    df.columns = pd.MultiIndex.from_product(
+        [["거래량", "거래대금"], ["매도", "매수", "순매수"]]
+    )
+    df = df.replace(r"[^-\w]", "", regex=True)
+    df = df.replace("", "0")
     return df.astype(np.int64)
 
 
 @dataframe_empty_handler
 def get_market_trading_value_and_volume_on_market_by_investor(
-        fromdate: str, todate: str, market: str, etf: bool = True,
-        etn: bool = True, elw: bool = True) -> DataFrame:
+    fromdate: str,
+    todate: str,
+    market: str,
+    etf: bool = True,
+    etn: bool = True,
+    elw: bool = True,
+) -> DataFrame:
     """[12008] 투자자별 거래실적 기간합계
 
     다음 메뉴의 내용을 스크래핑 함
@@ -549,30 +644,34 @@ def get_market_trading_value_and_volume_on_market_by_investor(
     etn = "EN" if etn else ""
     elw = "EW" if elw else ""
 
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     df = 투자자별_거래실적_전체시장_기간합계().fetch(
-        fromdate, todate, market2mktid[market], etf, etn, elw)
+        fromdate, todate, market2mktid[market], etf, etn, elw
+    )
 
-    df = df.set_index('INVST_TP_NM')
-    df.index.name = '투자자구분'
-    df.columns = pd.MultiIndex.from_product([['거래량', '거래대금'],
-                                             ['매도', '매수', '순매수']])
-    df = df.replace(r'[^-\w]', '', regex=True)
-    df = df.replace('', '0')
+    df = df.set_index("INVST_TP_NM")
+    df.index.name = "투자자구분"
+    df.columns = pd.MultiIndex.from_product(
+        [["거래량", "거래대금"], ["매도", "매수", "순매수"]]
+    )
+    df = df.replace(r"[^-\w]", "", regex=True)
+    df = df.replace("", "0")
     return df.astype(np.int64)
 
 
 @dataframe_empty_handler
 def get_market_trading_value_and_volume_on_market_by_date(
-        fromdate: str, todate: str, market: str, etf: bool, etn: bool,
-        elw: bool, option_a: str, option_b: str, detail_view: bool) \
-        -> DataFrame:
+    fromdate: str,
+    todate: str,
+    market: str,
+    etf: bool,
+    etn: bool,
+    elw: bool,
+    option_a: str,
+    option_b: str,
+    detail_view: bool,
+) -> DataFrame:
     """[12008] 투자자별 거래실적
 
     Args:
@@ -600,39 +699,50 @@ def get_market_trading_value_and_volume_on_market_by_date(
     option_a = {"거래량": 1, "거래대금": 2}.get(option_a, 1)
     option_b = {"매도": 1, "매수": 2, "순매수": 3}.get(option_b, 3)
 
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     if detail_view:
         df = 투자자별_거래실적_전체시장_일별추이_상세().fetch(
-            fromdate, todate, market2mktid[market], etf, etn, elw, option_a,
-            option_b)
-        df.columns = ['날짜', '금융투자', '보험', '투신', '사모', '은행',
-                      '기타금융', '연기금', '기타법인', '개인', '외국인',
-                      '기타외국인', '전체']
+            fromdate, todate, market2mktid[market], etf, etn, elw, option_a, option_b
+        )
+        df.columns = [
+            "날짜",
+            "금융투자",
+            "보험",
+            "투신",
+            "사모",
+            "은행",
+            "기타금융",
+            "연기금",
+            "기타법인",
+            "개인",
+            "외국인",
+            "기타외국인",
+            "전체",
+        ]
     else:
         df = 투자자별_거래실적_전체시장_일별추이_일반().fetch(
-            fromdate, todate, market2mktid[market], etf, etn, elw, option_a,
-            option_b)
-        df.columns = ['날짜', '기관합계', '기타법인', '개인', '외국인합계',
-                      '전체']
+            fromdate, todate, market2mktid[market], etf, etn, elw, option_a, option_b
+        )
+        df.columns = ["날짜", "기관합계", "기타법인", "개인", "외국인합계", "전체"]
 
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
-    df = df.replace(r'[^-\w]', '', regex=True)
-    df = df.replace('', '0')
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
+    df = df.replace(r"[^-\w]", "", regex=True)
+    df = df.replace("", "0")
     df = df.astype(np.int64)
     return df.sort_index()
 
 
 @dataframe_empty_handler
 def get_market_trading_value_and_volume_on_ticker_by_date(
-        fromdate: str, todate: str, ticker: str, option_a: str, option_b: str,
-        detail_view: bool) -> DataFrame:
+    fromdate: str,
+    todate: str,
+    ticker: str,
+    option_a: str,
+    option_b: str,
+    detail_view: bool,
+) -> DataFrame:
     """[12008] 투자자별 거래실적
 
     Args:
@@ -658,27 +768,41 @@ def get_market_trading_value_and_volume_on_ticker_by_date(
 
     if detail_view:
         df = 투자자별_거래실적_개별종목_일별추이_상세().fetch(
-            fromdate, todate, isin, option_a, option_b)
-        df.columns = ['날짜', '금융투자', '보험', '투신', '사모', '은행',
-                      '기타금융', '연기금', '기타법인', '개인', '외국인',
-                      '기타외국인', '전체']
+            fromdate, todate, isin, option_a, option_b
+        )
+        df.columns = [
+            "날짜",
+            "금융투자",
+            "보험",
+            "투신",
+            "사모",
+            "은행",
+            "기타금융",
+            "연기금",
+            "기타법인",
+            "개인",
+            "외국인",
+            "기타외국인",
+            "전체",
+        ]
     else:
         df = 투자자별_거래실적_개별종목_일별추이_일반().fetch(
-            fromdate, todate, isin, option_a, option_b)
-        df.columns = ['날짜', '기관합계', '기타법인', '개인', '외국인합계',
-                      '전체']
+            fromdate, todate, isin, option_a, option_b
+        )
+        df.columns = ["날짜", "기관합계", "기타법인", "개인", "외국인합계", "전체"]
 
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
-    df = df.replace(r'[^-\w]', '', regex=True)
-    df = df.replace('', '0')
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
+    df = df.replace(r"[^-\w]", "", regex=True)
+    df = df.replace("", "0")
     df = df.astype(np.int64)
     return df.sort_index()
 
 
 @dataframe_empty_handler
 def get_market_net_purchases_of_equities_by_ticker(
-        fromdate: str, todate: str, market: str, investor: str) -> DataFrame:
+    fromdate: str, todate: str, market: str, investor: str
+) -> DataFrame:
     """[12010] 투자자별 순매수상위종목
 
     Args:
@@ -711,12 +835,7 @@ def get_market_net_purchases_of_equities_by_ticker(
             352820     빅히트      247298      442325        195027   39722470000   73131351500     33408881500
     """  # pylint: disable=line-too-long # noqa: E501
 
-    market2mktid = {
-        "ALL": "ALL",
-        "KOSPI": "STK",
-        "KOSDAQ": "KSQ",
-        "KONEX": "KNX"
-    }
+    market2mktid = {"ALL": "ALL", "KOSPI": "STK", "KOSDAQ": "KSQ", "KONEX": "KNX"}
 
     investor2invstTpCd = {
         "금융투자": 1000,
@@ -731,24 +850,39 @@ def get_market_net_purchases_of_equities_by_ticker(
         "개인": 8000,
         "외국인": 9000,
         "기타외국인": 9001,
-        "전체": 9999
+        "전체": 9999,
     }
 
     df = 투자자별_순매수상위종목().fetch(
-        fromdate, todate, market2mktid[market], investor2invstTpCd[investor])
+        fromdate, todate, market2mktid[market], investor2invstTpCd[investor]
+    )
 
-    df.columns = ['티커', '종목명', '매도거래량', '매수거래량', '순매수거래량',
-                  '매도거래대금', '매수거래대금', '순매수거래대금']
-    df = df.replace('/', '', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        '티커': str, '종목명': str, '매수거래량': np.int64,
-        '매도거래량': np.int64, '순매수거래량': np.int64,
-        '매수거래대금': np.int64, '매도거래대금': np.int64,
-        '순매수거래대금': np.int64
-    })
-    df['티커'] = df['티커'].apply(lambda x: x.zfill(6))
-    return df.set_index('티커')
+    df.columns = [
+        "티커",
+        "종목명",
+        "매도거래량",
+        "매수거래량",
+        "순매수거래량",
+        "매도거래대금",
+        "매수거래대금",
+        "순매수거래대금",
+    ]
+    df = df.replace("/", "", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "티커": str,
+            "종목명": str,
+            "매수거래량": np.int64,
+            "매도거래량": np.int64,
+            "순매수거래량": np.int64,
+            "매수거래대금": np.int64,
+            "매도거래대금": np.int64,
+            "순매수거래대금": np.int64,
+        }
+    )
+    df["티커"] = df["티커"].apply(lambda x: x.zfill(6))
+    return df.set_index("티커")
 
 
 @dataframe_empty_handler
@@ -778,27 +912,36 @@ def get_market_sector_classifications(date: str, market: str) -> DataFrame:
     }
     df = 업종분류현황().fetch(date, market2mktid[market])
 
-    df = df[["ISU_SRT_CD", "ISU_ABBRV", "IDX_IND_NM", "TDD_CLSPRC",
-             "CMPPREVDD_PRC", "FLUC_RT", "MKTCAP"]]
-    df.columns = ["종목코드", "종목명", "업종명", "종가", "대비", "등락률",
-                  "시가총액"]
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('', '0', regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "종가": np.int32,
-        "대비": np.float64,
-        "등락률": np.float64,
-        "시가총액": np.int64
-    })
+    df = df[
+        [
+            "ISU_SRT_CD",
+            "ISU_ABBRV",
+            "IDX_IND_NM",
+            "TDD_CLSPRC",
+            "CMPPREVDD_PRC",
+            "FLUC_RT",
+            "MKTCAP",
+        ]
+    ]
+    df.columns = ["종목코드", "종목명", "업종명", "종가", "대비", "등락률", "시가총액"]
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("", "0", regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "종가": np.int32,
+            "대비": np.float64,
+            "등락률": np.float64,
+            "시가총액": np.int64,
+        }
+    )
     return df.set_index("종목코드")
 
 
 # -----------------------------------------------------------------------------
 # index
 @dataframe_empty_handler
-def get_index_ohlcv_by_date(fromdate: str, todate: str, ticker: str) \
-        -> DataFrame:
+def get_index_ohlcv_by_date(fromdate: str, todate: str, ticker: str) -> DataFrame:
     """일자별 특정 지수의 OHLCV
 
     Args:
@@ -818,27 +961,45 @@ def get_index_ohlcv_by_date(fromdate: str, todate: str, ticker: str) \
     """  # pylint: disable=line-too-long # noqa: E501
 
     df = 개별지수시세().fetch(ticker[1:], ticker[0], fromdate, todate)
-    df = df[['TRD_DD', 'OPNPRC_IDX', 'HGPRC_IDX', 'LWPRC_IDX',
-             'CLSPRC_IDX', 'ACC_TRDVOL', 'ACC_TRDVAL', 'MKTCAP']]
+    df = df[
+        [
+            "TRD_DD",
+            "OPNPRC_IDX",
+            "HGPRC_IDX",
+            "LWPRC_IDX",
+            "CLSPRC_IDX",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+            "MKTCAP",
+        ]
+    ]
     df.columns = [
-        '날짜', '시가', '고가', '저가', '종가', '거래량', '거래대금',
-        '상장시가총액'
+        "날짜",
+        "시가",
+        "고가",
+        "저가",
+        "종가",
+        "거래량",
+        "거래대금",
+        "상장시가총액",
     ]
 
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('', '0')
-    df = df.set_index('날짜')
-    df = df.astype({
-        '시가': np.float64,
-        '고가': np.float64,
-        '저가': np.float64,
-        '종가': np.float64,
-        '거래량': np.int64,
-        '거래대금': np.int64,
-        '상장시가총액': np.int64
-    })
-    df.index = pd.to_datetime(df.index, format='%Y%m%d')
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("", "0")
+    df = df.set_index("날짜")
+    df = df.astype(
+        {
+            "시가": np.float64,
+            "고가": np.float64,
+            "저가": np.float64,
+            "종가": np.float64,
+            "거래량": np.int64,
+            "거래대금": np.int64,
+            "상장시가총액": np.int64,
+        }
+    )
+    df.index = pd.to_datetime(df.index, format="%Y%m%d")
     return df.sort_index()
 
 
@@ -864,30 +1025,45 @@ def get_index_ohlcv_by_ticker(date: str, market: str = "KOSPI") -> DataFrame:
             코스피50              2736.77   2752.70   2693.90   2700.81   52627040    5768837287881
     """  # pylint: disable=line-too-long # noqa: E501
 
-    market2idx = {
-        "KRX": "01",
-        "KOSPI": "02",
-        "KOSDAQ": "03",
-        "테마": "04"
-    }
+    market2idx = {"KRX": "01", "KOSPI": "02", "KOSDAQ": "03", "테마": "04"}
     df = 전체지수시세().fetch(date, market2idx[market])
-    df = df[['IDX_NM', 'OPNPRC_IDX', 'HGPRC_IDX', 'LWPRC_IDX',
-             'CLSPRC_IDX', 'ACC_TRDVOL', 'ACC_TRDVAL', 'MKTCAP']]
-    df.columns = ['지수명', '시가', '고가', '저가', '종가', '거래량',
-                  '거래대금', '상장시가총액']
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.replace('', '0')
-    df = df.set_index('지수명')
-    df = df.astype({
-        '시가': np.float64,
-        '고가': np.float64,
-        '저가': np.float64,
-        '종가': np.float64,
-        '거래량': np.int64,
-        '거래대금': np.int64,
-        '상장시가총액': np.int64
-    })
+    df = df[
+        [
+            "IDX_NM",
+            "OPNPRC_IDX",
+            "HGPRC_IDX",
+            "LWPRC_IDX",
+            "CLSPRC_IDX",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+            "MKTCAP",
+        ]
+    ]
+    df.columns = [
+        "지수명",
+        "시가",
+        "고가",
+        "저가",
+        "종가",
+        "거래량",
+        "거래대금",
+        "상장시가총액",
+    ]
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.replace("", "0")
+    df = df.set_index("지수명")
+    df = df.astype(
+        {
+            "시가": np.float64,
+            "고가": np.float64,
+            "저가": np.float64,
+            "종가": np.float64,
+            "거래량": np.int64,
+            "거래대금": np.int64,
+            "상장시가총액": np.int64,
+        }
+    )
     return df
 
 
@@ -909,29 +1085,23 @@ def get_index_listing_date(market: str = "KOSPI") -> DataFrame:
             코스피 200 중소형주  2010.01.04  2015.07.13     1000.0     101
     """
 
-    market2idx = {
-        "KRX": "01",
-        "KOSPI": "02",
-        "KOSDAQ": "03",
-        "테마": "04"
-    }
+    market2idx = {"KRX": "01", "KOSPI": "02", "KOSDAQ": "03", "테마": "04"}
     df = 전체지수기본정보().fetch(market2idx[market])
-    df = df[['IDX_NM', 'BAS_TM_CONTN', 'ANNC_TM_CONTN', 'BAS_IDX_CONTN',
-             'COMPST_ISU_CNT']]
-    df.columns = ['지수명', '기준시점', '발표시점', '기준지수', '종목수']
-    df = df.set_index('지수명')
-    df = df.replace(',', '', regex=True)
-    df = df.replace('', 0)
-    df = df.astype({
-        "기준지수": np.float64,
-        "종목수": np.int16
-    })
+    df = df[
+        ["IDX_NM", "BAS_TM_CONTN", "ANNC_TM_CONTN", "BAS_IDX_CONTN", "COMPST_ISU_CNT"]
+    ]
+    df.columns = ["지수명", "기준시점", "발표시점", "기준지수", "종목수"]
+    df = df.set_index("지수명")
+    df = df.replace(",", "", regex=True)
+    df = df.replace("", 0)
+    df = df.astype({"기준지수": np.float64, "종목수": np.int16})
     return df
 
 
 @dataframe_empty_handler
-def get_index_price_change_by_ticker(fromdate: str, todate: str, market: str) \
-        -> DataFrame:
+def get_index_price_change_by_ticker(
+    fromdate: str, todate: str, market: str
+) -> DataFrame:
     """지정된 기간 동안의 전종목 OHLCV
 
     Args:
@@ -953,33 +1123,37 @@ def get_index_price_change_by_ticker(fromdate: str, todate: str, market: str) \
             코스닥 150 커뮤니케이션서비스   2037.000000   2090.000000  2.599609     25001250    816778277690
     """  # pylint: disable=line-too-long # noqa: E501
 
-    market2idx = {
-        "KRX": "01",
-        "KOSPI": "02",
-        "KOSDAQ": "03",
-        "테마": "04"
-    }
+    market2idx = {"KRX": "01", "KOSPI": "02", "KOSDAQ": "03", "테마": "04"}
     df = 전체지수등락률().fetch(fromdate, todate, market2idx[market])
-    df = df[['IDX_IND_NM', 'OPN_DD_INDX', 'END_DD_INDX', 'FLUC_RT',
-             'ACC_TRDVOL', 'ACC_TRDVAL']]
-    df.columns = ['지수명', '시가', '종가', '등락률', '거래량', '거래대금']
-    df = df.set_index('지수명')
-    df = df.replace(r'[^\w\.-]', '', regex=True)
-    df = df.replace('', 0)
-    df = df.replace('-', 0)
-    df = df.astype({
-        "시가": np.float64,
-        "종가": np.float64,
-        "등락률": np.float16,
-        "거래량": np.int64,
-        "거래대금": np.int64
-    })
+    df = df[
+        [
+            "IDX_IND_NM",
+            "OPN_DD_INDX",
+            "END_DD_INDX",
+            "FLUC_RT",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+        ]
+    ]
+    df.columns = ["지수명", "시가", "종가", "등락률", "거래량", "거래대금"]
+    df = df.set_index("지수명")
+    df = df.replace(r"[^\w\.-]", "", regex=True)
+    df = df.replace("", 0)
+    df = df.replace("-", 0)
+    df = df.astype(
+        {
+            "시가": np.float64,
+            "종가": np.float64,
+            "등락률": np.float16,
+            "거래량": np.int64,
+            "거래대금": np.int64,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
-def get_index_fundamental_by_ticker(date: str, market: str = "KOSPI") \
-        -> DataFrame:
+def get_index_fundamental_by_ticker(date: str, market: str = "KOSPI") -> DataFrame:
     """[11004] 전체지수 기본정보
 
     Args
@@ -1001,35 +1175,39 @@ def get_index_fundamental_by_ticker(date: str, market: str = "KOSPI") \
 
     """
 
-    market2idx = {
-        "KRX": "01",
-        "KOSPI": "02",
-        "KOSDAQ": "03",
-        "테마": "04"
-    }
+    market2idx = {"KRX": "01", "KOSPI": "02", "KOSDAQ": "03", "테마": "04"}
     df = PER_PBR_배당수익률_전지수().fetch(date, market2idx[market])
-    df = df[['IDX_NM', 'CLSPRC_IDX', 'FLUC_RT', 'WT_PER', 'FWD_PER',
-             'WT_STKPRC_NETASST_RTO', 'DIV_YD']]
-    df.columns = ['지수명', '종가', '등락률', 'PER', '선행PER', 'PBR',
-                  '배당수익률']
-    df = df.set_index('지수명')
-    df = df.replace('^-$', 0, regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.replace('', 0)
-    df = df.astype({
-        "종가": np.float64,
-        "등락률": np.float64,
-        "PER": np.float32,
-        "선행PER": np.float32,
-        "PBR": np.float32,
-        "배당수익률": np.float32
-    })
+    df = df[
+        [
+            "IDX_NM",
+            "CLSPRC_IDX",
+            "FLUC_RT",
+            "WT_PER",
+            "FWD_PER",
+            "WT_STKPRC_NETASST_RTO",
+            "DIV_YD",
+        ]
+    ]
+    df.columns = ["지수명", "종가", "등락률", "PER", "선행PER", "PBR", "배당수익률"]
+    df = df.set_index("지수명")
+    df = df.replace("^-$", 0, regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.replace("", 0)
+    df = df.astype(
+        {
+            "종가": np.float64,
+            "등락률": np.float64,
+            "PER": np.float32,
+            "선행PER": np.float32,
+            "PBR": np.float32,
+            "배당수익률": np.float32,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
-def get_index_fundamental_by_date(fromdate: str, todate: str, ticker: str) \
-        -> DataFrame:
+def get_index_fundamental_by_date(fromdate: str, todate: str, ticker: str) -> DataFrame:
     """일자별 특정 지수의 OHLCV
 
     Args:
@@ -1051,24 +1229,25 @@ def get_index_fundamental_by_date(fromdate: str, todate: str, ticker: str) \
             2021-11-26  1770.31   -1.61    13.73      0.0  1.26        1.99
     """
 
-    df = PER_PBR_배당수익률_개별지수().fetch(
-        fromdate, todate, ticker[0], ticker[1:])
-    df = df[['TRD_DD', 'CLSPRC_IDX', 'FLUC_RT', 'WT_PER',
-             'WT_STKPRC_NETASST_RTO', 'DIV_YD']]
-    df.columns = ['날짜', '종가', '등락률', 'PER', 'PBR',
-                  '배당수익률']
-    df = df.set_index('날짜')
+    df = PER_PBR_배당수익률_개별지수().fetch(fromdate, todate, ticker[0], ticker[1:])
+    df = df[
+        ["TRD_DD", "CLSPRC_IDX", "FLUC_RT", "WT_PER", "WT_STKPRC_NETASST_RTO", "DIV_YD"]
+    ]
+    df.columns = ["날짜", "종가", "등락률", "PER", "PBR", "배당수익률"]
+    df = df.set_index("날짜")
     df.index = pd.to_datetime(df.index)
-    df = df.replace('^-$', 0, regex=True)
-    df = df.replace(',', '', regex=True)
-    df = df.replace('', 0)
-    df = df.astype({
-        "종가": np.float64,
-        "등락률": np.float64,
-        "PER": np.float32,
-        "PBR": np.float32,
-        "배당수익률": np.float32
-    })
+    df = df.replace("^-$", 0, regex=True)
+    df = df.replace(",", "", regex=True)
+    df = df.replace("", 0)
+    df = df.astype(
+        {
+            "종가": np.float64,
+            "등락률": np.float64,
+            "PER": np.float32,
+            "PBR": np.float32,
+            "배당수익률": np.float32,
+        }
+    )
     return df.sort_index()
 
 
@@ -1087,7 +1266,7 @@ def get_index_portfolio_deposit_file(date: str, ticker: str) -> list:
     df = 지수구성종목().fetch(date, ticker[1:], ticker[0])
     if df.empty:
         return []
-    return df['ISU_SRT_CD'].tolist()
+    return df["ISU_SRT_CD"].tolist()
 
 
 # -----------------------------------------------------------------------------
@@ -1108,31 +1287,41 @@ def get_shorting_status_by_date(fromdate, todate, ticker):
 
     isin = get_stock_ticker_isin(ticker)
     df = 개별종목_공매도_종합정보().fetch(fromdate, todate, isin)
-    df = df[['TRD_DD', 'CVSRTSELL_TRDVOL', 'STR_CONST_VAL1',
-             'CVSRTSELL_TRDVAL', 'STR_CONST_VAL2']]
-    df.columns = ['날짜', '거래량', '잔고수량', '거래대금', '잔고금액']
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df = df[
+        [
+            "TRD_DD",
+            "CVSRTSELL_TRDVOL",
+            "STR_CONST_VAL1",
+            "CVSRTSELL_TRDVAL",
+            "STR_CONST_VAL2",
+        ]
+    ]
+    df.columns = ["날짜", "거래량", "잔고수량", "거래대금", "잔고금액"]
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
 
     # '-'는 데이터가 집계되지 않은 것을 의미한다.
     # 최근 2일 간의 데이터 ([:2])에서 '-'가 하나는 행의 갯수를 계산함
-    idx = (df.iloc[:2] == '-').any(axis=1).sum()
+    idx = (df.iloc[:2] == "-").any(axis=1).sum()
     df = df.iloc[idx:]
 
-    df = df.replace(r'\D', '', regex=True)
-    df = df.replace('', 0)
-    df = df.astype({
-        "거래량": np.int32,
-        "잔고수량": np.int32,
-        "거래대금": np.int64,
-        "잔고금액": np.int64
-    })
+    df = df.replace(r"\D", "", regex=True)
+    df = df.replace("", 0)
+    df = df.astype(
+        {
+            "거래량": np.int32,
+            "잔고수량": np.int32,
+            "거래대금": np.int64,
+            "잔고금액": np.int64,
+        }
+    )
     return df.sort_index()
 
 
 @dataframe_empty_handler
 def get_shorting_trading_value_and_volume_by_date(
-        fromdate: str, todate: str, ticker: str) -> DataFrame:
+    fromdate: str, todate: str, ticker: str
+) -> DataFrame:
     """[32001] 개별종목 공매도 거래
 
     Args:
@@ -1158,28 +1347,40 @@ def get_shorting_trading_value_and_volume_by_date(
     isin = get_stock_ticker_isin(ticker)
     df = 개별종목_공매도_거래_개별추이().fetch(fromdate, todate, isin)
 
-    df = df.set_index('TRD_DD')
+    df = df.set_index("TRD_DD")
     df.index.name = "날짜"
-    df = df[['CVSRTSELL_TRDVOL', 'ACC_TRDVOL', 'TRDVOL_WT', 'CVSRTSELL_TRDVAL',
-             'ACC_TRDVAL', 'TRDVAL_WT']]
-    df.columns = pd.MultiIndex.from_product([['거래량', '거래대금'],
-                                             ['공매도', '매수', '비중']])
-    df = df.replace(r'[^-\w\.]', '', regex=True).replace('', '0')
-    df = df.astype({
-        ("거래량", "공매도"): np.int64,
-        ("거래량", "매수"): np.int64,
-        ("거래량", "비중"): np.float32,
-        ("거래대금", "공매도"): np.int64,
-        ("거래대금", "매수"): np.int64,
-        ("거래대금", "비중"): np.float32
-    })
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df = df[
+        [
+            "CVSRTSELL_TRDVOL",
+            "ACC_TRDVOL",
+            "TRDVOL_WT",
+            "CVSRTSELL_TRDVAL",
+            "ACC_TRDVAL",
+            "TRDVAL_WT",
+        ]
+    ]
+    df.columns = pd.MultiIndex.from_product(
+        [["거래량", "거래대금"], ["공매도", "매수", "비중"]]
+    )
+    df = df.replace(r"[^-\w\.]", "", regex=True).replace("", "0")
+    df = df.astype(
+        {
+            ("거래량", "공매도"): np.int64,
+            ("거래량", "매수"): np.int64,
+            ("거래량", "비중"): np.float32,
+            ("거래대금", "공매도"): np.int64,
+            ("거래대금", "매수"): np.int64,
+            ("거래대금", "비중"): np.float32,
+        }
+    )
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
     return df.sort_index()
 
 
 @dataframe_empty_handler
 def get_shorting_trading_value_and_volume_by_ticker(
-        date: str, market: str, include: list) -> DataFrame:
+    date: str, market: str, include: list
+) -> DataFrame:
     """[32001] 개별종목 공매도 거래
 
     Args:
@@ -1215,28 +1416,39 @@ def get_shorting_trading_value_and_volume_by_ticker(
 
     df = 개별종목_공매도_거래_전종목().fetch(date, market, include)
 
-    df = df.set_index('ISU_CD')
+    df = df.set_index("ISU_CD")
     df.index.name = "티커"
-    df = df[['CVSRTSELL_TRDVOL', 'ACC_TRDVOL', 'TRDVOL_WT', 'CVSRTSELL_TRDVAL',
-             'ACC_TRDVAL', 'TRDVAL_WT']]
-    df.columns = pd.MultiIndex.from_product([['거래량', '거래대금'],
-                                             ['공매도', '매수', '비중']])
-    df = df.replace(r'[^-\w\.]', '', regex=True).replace('', '0')
-    df = df.astype({
-        ("거래량", "공매도"): np.int64,
-        ("거래량", "매수"): np.int64,
-        ("거래량", "비중"): np.float32,
-        ("거래대금", "공매도"): np.int64,
-        ("거래대금", "매수"): np.int64,
-        ("거래대금", "비중"): np.float32
-    })
+    df = df[
+        [
+            "CVSRTSELL_TRDVOL",
+            "ACC_TRDVOL",
+            "TRDVOL_WT",
+            "CVSRTSELL_TRDVAL",
+            "ACC_TRDVAL",
+            "TRDVAL_WT",
+        ]
+    ]
+    df.columns = pd.MultiIndex.from_product(
+        [["거래량", "거래대금"], ["공매도", "매수", "비중"]]
+    )
+    df = df.replace(r"[^-\w\.]", "", regex=True).replace("", "0")
+    df = df.astype(
+        {
+            ("거래량", "공매도"): np.int64,
+            ("거래량", "매수"): np.int64,
+            ("거래량", "비중"): np.float32,
+            ("거래대금", "공매도"): np.int64,
+            ("거래대금", "매수"): np.int64,
+            ("거래대금", "비중"): np.float32,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
-def get_shorting_investor_by_date(fromdate: str, todate: str,
-                                  market: str = "KOSPI",
-                                  inquery: str = "거래량") -> DataFrame:
+def get_shorting_investor_by_date(
+    fromdate: str, todate: str, market: str = "KOSPI", inquery: str = "거래량"
+) -> DataFrame:
     """일자별로 정렬된 투자자별 공매도 잔고 현황
 
     Args:
@@ -1270,24 +1482,18 @@ def get_shorting_investor_by_date(fromdate: str, todate: str,
                 2021-01-08  525053     0       0     0  525053
 
     """
-    inquery2idx = {
-        "거래량": 1,
-        "거래대금": 2
-    }
-    market2idx = {
-        "KOSPI": 1,
-        "KOSDAQ": 2,
-        "KONEX": 6
-    }
+    inquery2idx = {"거래량": 1, "거래대금": 2}
+    market2idx = {"KOSPI": 1, "KOSDAQ": 2, "KONEX": 6}
 
     df = 투자자별_공매도_거래().fetch(
-        fromdate, todate, inquery2idx[inquery], market2idx[market])
+        fromdate, todate, inquery2idx[inquery], market2idx[market]
+    )
 
-    df.columns = ['날짜', '기관', '개인', '외국인', '기타', '합계']
-    df = df.replace(r'[^\w\.]', '', regex=True)
-    df = df.replace('', 0)
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y%m%d')
+    df.columns = ["날짜", "기관", "개인", "외국인", "기타", "합계"]
+    df = df.replace(r"[^\w\.]", "", regex=True)
+    df = df.replace("", 0)
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y%m%d")
     return df.astype(np.int64).sort_index()
 
 
@@ -1313,34 +1519,51 @@ def get_shorting_volume_top50(date: str, market: str) -> DataFrame:
             005945   4         25401240    908915950        2.79               4610634                  5.51                     0.44              6.40       -0.35
             227840   5         13784400    546597900        2.52               3084294                  4.47                     0.51              4.91       -2.37
     """  # pylint: disable=line-too-long # noqa: E501
-    market2idx = {
-        "KOSPI": 1,
-        "KOSDAQ": 2,
-        "KONEX": 3
-    }
+    market2idx = {"KOSPI": 1, "KOSDAQ": 2, "KONEX": 3}
     df = 공매도_거래상위_50종목().fetch(date, market2idx[market])
 
-    df = df[["RANK", "ISU_CD", "CVSRTSELL_TRDVAL", "ACC_TRDVAL",
-             "TDD_SRTSELL_WT", "STR_CONST_VAL1", "STR_CONST_VAL2",
-             "VALU_PD_AVG_SRTSELL_WT", "VALU_PD_CMP_TDD_SRTSELL_RTO",
-             "PRC_YD"]]
-    df.columns = ['순위', '티커', '공매도거래대금', '총거래대금', '공매도비중',
-                  '직전40일거래대금평균', '공매도거래대금증가율',
-                  '직전40일공매도평균비중', '공매도비중증가율', '주가수익률']
-    df = df.set_index('티커')
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace('', 0)
-    df = df.astype({
-        "순위": np.int32,
-        "공매도거래대금": np.int64,
-        "총거래대금": np.int64,
-        "직전40일거래대금평균": np.int64,
-        "공매도비중": np.float64,
-        "공매도거래대금증가율": np.float64,
-        "직전40일공매도평균비중": np.float64,
-        "공매도비중증가율": np.float64,
-        "주가수익률": np.float64
-    })
+    df = df[
+        [
+            "RANK",
+            "ISU_CD",
+            "CVSRTSELL_TRDVAL",
+            "ACC_TRDVAL",
+            "TDD_SRTSELL_WT",
+            "STR_CONST_VAL1",
+            "STR_CONST_VAL2",
+            "VALU_PD_AVG_SRTSELL_WT",
+            "VALU_PD_CMP_TDD_SRTSELL_RTO",
+            "PRC_YD",
+        ]
+    ]
+    df.columns = [
+        "순위",
+        "티커",
+        "공매도거래대금",
+        "총거래대금",
+        "공매도비중",
+        "직전40일거래대금평균",
+        "공매도거래대금증가율",
+        "직전40일공매도평균비중",
+        "공매도비중증가율",
+        "주가수익률",
+    ]
+    df = df.set_index("티커")
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace("", 0)
+    df = df.astype(
+        {
+            "순위": np.int32,
+            "공매도거래대금": np.int64,
+            "총거래대금": np.int64,
+            "직전40일거래대금평균": np.int64,
+            "공매도비중": np.float64,
+            "공매도거래대금증가율": np.float64,
+            "직전40일공매도평균비중": np.float64,
+            "공매도비중증가율": np.float64,
+            "주가수익률": np.float64,
+        }
+    )
     return df
 
 
@@ -1367,28 +1590,32 @@ def get_shorting_balance_top50(date: str, market: str) -> DataFrame:
             011690    5      1604890     58494201     1957965800  7.136293e+10   2.740234
     """  # pylint: disable=line-too-long # noqa: E501
 
-    market2idx = {
-        "KOSPI": 1,
-        "KOSDAQ": 2,
-        "KONEX": 3
-    }
+    market2idx = {"KOSPI": 1, "KOSDAQ": 2, "KONEX": 3}
     df = 공매도_잔고상위_50종목().fetch(date, market2idx[market])
 
-    df = df[["RANK", "ISU_CD", "BAL_QTY", "LIST_SHRS", "BAL_AMT", "MKTCAP",
-             "BAL_RTO"]]
-    df.columns = ['순위', '티커', '공매도잔고', '상장주식수', '공매도금액',
-                  '시가총액', '비중']
-    df = df.set_index('티커')
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace('', 0)
-    df = df.astype({
-        "순위": np.int32,
-        "공매도잔고": np.int64,
-        "상장주식수": np.int64,
-        "공매도금액": np.int64,
-        "시가총액": np.float64,
-        "비중": np.float16
-    })
+    df = df[["RANK", "ISU_CD", "BAL_QTY", "LIST_SHRS", "BAL_AMT", "MKTCAP", "BAL_RTO"]]
+    df.columns = [
+        "순위",
+        "티커",
+        "공매도잔고",
+        "상장주식수",
+        "공매도금액",
+        "시가총액",
+        "비중",
+    ]
+    df = df.set_index("티커")
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace("", 0)
+    df = df.astype(
+        {
+            "순위": np.int32,
+            "공매도잔고": np.int64,
+            "상장주식수": np.int64,
+            "공매도금액": np.int64,
+            "시가총액": np.float64,
+            "비중": np.float16,
+        }
+    )
     return df
 
 
@@ -1415,32 +1642,28 @@ def get_shorting_balance_by_ticker(date: str, market: str) -> DataFrame:
             138930      596477    325935246  3340271200  1.825237e+12  0.180054
     """
 
-    market2idx = {
-        "KOSPI": 1,
-        "KOSDAQ": 2,
-        "KONEX": 3
-    }
+    market2idx = {"KOSPI": 1, "KOSDAQ": 2, "KONEX": 3}
     df = 전종목_공매도_잔고().fetch(date, market2idx[market])
 
     df = df[["ISU_CD", "BAL_QTY", "LIST_SHRS", "BAL_AMT", "MKTCAP", "BAL_RTO"]]
-    df.columns = ['티커', '공매도잔고', '상장주식수', '공매도금액',
-                  '시가총액', '비중']
-    df = df.set_index('티커')
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace('', 0)
-    df = df.astype({
-        "공매도잔고": np.int64,
-        "상장주식수": np.int64,
-        "공매도금액": np.int64,
-        "시가총액": np.float64,
-        "비중": np.float16
-    })
+    df.columns = ["티커", "공매도잔고", "상장주식수", "공매도금액", "시가총액", "비중"]
+    df = df.set_index("티커")
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace("", 0)
+    df = df.astype(
+        {
+            "공매도잔고": np.int64,
+            "상장주식수": np.int64,
+            "공매도금액": np.int64,
+            "시가총액": np.float64,
+            "비중": np.float16,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
-def get_shorting_balance_by_date(fromdate: str, todate: str, ticker: str) \
-        -> DataFrame:
+def get_shorting_balance_by_date(fromdate: str, todate: str, ticker: str) -> DataFrame:
     """일자별로 정렬된 투자자별 공매도 잔고 현황
 
     Args:
@@ -1466,21 +1689,23 @@ def get_shorting_balance_by_date(fromdate: str, todate: str, ticker: str) \
     isin = get_stock_ticker_isin(ticker)
     df = 개별종목_공매도_잔고().fetch(fromdate, todate, isin)
 
-    df = df[["RPT_DUTY_OCCR_DD", "BAL_QTY", "LIST_SHRS", "BAL_AMT", "MKTCAP",
-             "BAL_RTO"]]
-    df.columns = ['날짜', '공매도잔고', '상장주식수', '공매도금액', '시가총액',
-                  '비중']
-    df = df.set_index('날짜')
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace('', 0)
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
-    df = df.astype({
-        "공매도잔고": np.int64,
-        "상장주식수": np.int64,
-        "공매도금액": np.int64,
-        "시가총액": np.float64,
-        "비중": np.float32
-    })
+    df = df[
+        ["RPT_DUTY_OCCR_DD", "BAL_QTY", "LIST_SHRS", "BAL_AMT", "MKTCAP", "BAL_RTO"]
+    ]
+    df.columns = ["날짜", "공매도잔고", "상장주식수", "공매도금액", "시가총액", "비중"]
+    df = df.set_index("날짜")
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace("", 0)
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
+    df = df.astype(
+        {
+            "공매도잔고": np.int64,
+            "상장주식수": np.int64,
+            "공매도금액": np.int64,
+            "시가총액": np.float64,
+            "비중": np.float32,
+        }
+    )
     return df.sort_index()
 
 
@@ -1501,21 +1726,28 @@ def get_stock_major_changes(ticker: str) -> DataFrame:
     isin = get_stock_ticker_isin(ticker)
     df = 기업주요변동사항().fetch(isin)
 
-    df.columns = ['날짜', '상호변경전', '상호변경후', '업종변경전',
-                  '업종변경후', '액면변경전', '액면변경후', '대표이사변경전',
-                  '대표이사변경후']
-    df = df.set_index('날짜')
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df[['액면변경전', '액면변경후']] = df[['액면변경전', '액면변경후']] \
-        .replace('', 0)
-    df = df.replace('', '-')
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df.columns = [
+        "날짜",
+        "상호변경전",
+        "상호변경후",
+        "업종변경전",
+        "업종변경후",
+        "액면변경전",
+        "액면변경후",
+        "대표이사변경전",
+        "대표이사변경후",
+    ]
+    df = df.set_index("날짜")
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df[["액면변경전", "액면변경후"]] = df[["액면변경전", "액면변경후"]].replace("", 0)
+    df = df.replace("", "-")
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
     df = df.astype({"액면변경전": np.int16})
     return df.sort_index()
 
 
 if __name__ == "__main__":
-    pd.set_option('display.expand_frame_repr', False)
+    pd.set_option("display.expand_frame_repr", False)
     # df = get_market_price_change_by_ticker(
     #   fromdate="20210101", todate="20210111")
     # df = get_shorting_trading_value_and_volume_by_date(

@@ -5,30 +5,31 @@ import numpy as np
 # pylint: disable-all
 # flake8: noqa
 
+
 class IndexTickerList(unittest.TestCase):
     def test_index_list_for_a_specific_day(self):
-        tickers = stock.get_index_ticker_list('20210118')
+        tickers = stock.get_index_ticker_list("20210118")
         self.assertIsInstance(tickers, list)
         self.assertGreater(len(tickers), 0)
-        self.assertEqual(tickers[0], '1001')
+        self.assertEqual(tickers[0], "1001")
 
     def test_index_list_for_a_holiday(self):
-        tickers = stock.get_index_ticker_list('20210130')
+        tickers = stock.get_index_ticker_list("20210130")
         self.assertIsInstance(tickers, list)
         self.assertGreater(len(tickers), 0)
-        self.assertEqual(tickers[0], '1001')
+        self.assertEqual(tickers[0], "1001")
 
     def test_index_list_in_kosdaq(self):
-        tickers = stock.get_index_ticker_list('20210130', 'KOSDAQ')
+        tickers = stock.get_index_ticker_list("20210130", "KOSDAQ")
         self.assertIsInstance(tickers, list)
         self.assertGreater(len(tickers), 0)
-        self.assertEqual(tickers[0], '2001')
+        self.assertEqual(tickers[0], "2001")
 
     def test_index_list_in_theme(self):
-        tickers = stock.get_index_ticker_list('20210130', '테마')
+        tickers = stock.get_index_ticker_list("20210130", "테마")
         self.assertIsInstance(tickers, list)
         self.assertGreater(len(tickers), 0)
-        self.assertEqual(tickers[0], '1163')
+        self.assertEqual(tickers[0], "1163")
 
     def test_index_name(self):
         name = stock.get_index_ticker_name("1001")
@@ -38,31 +39,32 @@ class IndexTickerList(unittest.TestCase):
         name = stock.get_index_ticker_name("1163")
         self.assertEqual(name, "코스피 고배당 50")
 
+
 class IndexPortfolioDepositFile(unittest.TestCase):
     def test_pdf_list_width_default_params(self):
-        tickers = stock.get_index_portfolio_deposit_file('1001')
+        tickers = stock.get_index_portfolio_deposit_file("1001")
         self.assertIsInstance(tickers, list)
         self.assertTrue(len(tickers) > 0)
 
-        tickers = stock.get_index_portfolio_deposit_file('2001')
+        tickers = stock.get_index_portfolio_deposit_file("2001")
         self.assertIsInstance(tickers, list)
         self.assertTrue(len(tickers) > 0)
 
-        tickers = stock.get_index_portfolio_deposit_file('1163')
+        tickers = stock.get_index_portfolio_deposit_file("1163")
         self.assertIsInstance(tickers, list)
         self.assertTrue(len(tickers) > 0)
 
     def test_pdf_list_in_businessday(self):
-        tickers = stock.get_index_portfolio_deposit_file('1001', '20210129')
+        tickers = stock.get_index_portfolio_deposit_file("1001", "20210129")
         self.assertIsInstance(tickers, list)
         self.assertEqual(len(tickers), 796)
 
-        tickers = stock.get_index_portfolio_deposit_file('1001', '20140502')
+        tickers = stock.get_index_portfolio_deposit_file("1001", "20140502")
         self.assertIsInstance(tickers, list)
         self.assertEqual(len(tickers), 760)
 
     def test_pdf_list_prior_to_20140501(self):
-        tickers = stock.get_index_portfolio_deposit_file('1001', '20140429')
+        tickers = stock.get_index_portfolio_deposit_file("1001", "20140429")
         # KRX web server does NOT provide data prior to 2014/05/01.
         self.assertIsInstance(tickers, list)
         self.assertEqual(len(tickers), 0)
@@ -78,9 +80,11 @@ class IndexOhlcvByDate(unittest.TestCase):
         # 2021-01-06  2993.34  3027.16  2961.37  2968.21  1793418534  29909396443430
         # 2021-01-07  2980.75  3055.28  2980.75  3031.68  1524654500  27182807334912
         # 2021-01-08  3040.11  3161.11  3040.11  3152.18  1297903388  40909490005818
-        temp = df.iloc[0:5, 0] == np.array([2874.50, 2943.67, 2993.34, 2980.75, 3040.11])
+        temp = df.iloc[0:5, 0] == np.array(
+            [2874.50, 2943.67, 2993.34, 2980.75, 3040.11]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         self.assertTrue(df.index[0] < df.index[-1])
 
@@ -98,9 +102,11 @@ class IndexOhlcvByDate(unittest.TestCase):
         # 2020-03-31  1997.03  2089.08  1439.43  1754.64  17091025314
         # 2020-04-30  1737.28  1957.51  1664.13  1947.56  21045120912
         # 2020-05-31  1906.42  2054.52  1894.29  2029.60  16206496902
-        temp = df.iloc[0:5, 0] == np.array([2201.21, 2086.61, 1997.03, 1737.28, 1906.42])
+        temp = df.iloc[0:5, 0] == np.array(
+            [2201.21, 2086.61, 1997.03, 1737.28, 1906.42]
+        )
         self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
+        self.assertIsInstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         self.assertTrue(df.index[0] < df.index[-1])
 
@@ -128,9 +134,9 @@ class IndexListingDate(unittest.TestCase):
         # 코스피 200 중소형주  2010.01.04  2015.07.13     1000.0     101
         self.assertIsInstance(df, pd.DataFrame)
         self.assertFalse(df.empty)
-        self.assertEqual(df.loc['코스피', '기준시점'], "1980.01.04")
-        self.assertEqual(df.loc['코스피', '발표시점'], "1983.01.04")
-        self.assertEqual(df.loc['코스피', '기준지수'], 100.0)
+        self.assertEqual(df.loc["코스피", "기준시점"], "1980.01.04")
+        self.assertEqual(df.loc["코스피", "발표시점"], "1983.01.04")
+        self.assertEqual(df.loc["코스피", "기준지수"], 100.0)
 
 
 class IndexPriceChangeByTicker(unittest.TestCase):
@@ -172,5 +178,6 @@ class IndexPriceChangeByTicker(unittest.TestCase):
         self.assertEqual(temp.sum(), 5)
         self.assertFalse(df.empty)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
