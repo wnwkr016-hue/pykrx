@@ -9,7 +9,7 @@ from pykrx.website.comm.webio import Get, Post
 class KrxFutureIo(Get):
     @property
     def url(self):
-        return "http://data.krx.co.kr/comm/bldAttendant/executeForResourceBundle.cmd"
+        return "https://data.krx.co.kr/comm/bldAttendant/executeForResourceBundle.cmd"
 
     def read(self, **params):
         resp = super().read(**params)
@@ -60,7 +60,7 @@ class KrxWebIo(Post):
 
     @property
     def url(self):
-        return "http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd"
+        return "https://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd"
 
     @property
     @abstractmethod
