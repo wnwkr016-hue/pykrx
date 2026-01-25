@@ -38,20 +38,7 @@ def uri_without_dates(r1, r2):
 
     norm1 = _normalize(r1.uri)
     norm2 = _normalize(r2.uri)
-    result = norm1 == norm2
-
-    # Debug logging
-    if not result:
-        import sys
-
-        print("\n[VCR URI Matcher Debug]", file=sys.stderr)
-        print(f"  Request URI: {r1.uri}", file=sys.stderr)
-        print(f"  Cassette URI: {r2.uri}", file=sys.stderr)
-        print(f"  Normalized Request: {norm1}", file=sys.stderr)
-        print(f"  Normalized Cassette: {norm2}", file=sys.stderr)
-        print(f"  Match: {result}\n", file=sys.stderr)
-
-    return result
+    return norm1 == norm2
 
 
 def form_body_matcher(r1, r2):
@@ -76,8 +63,8 @@ def form_body_matcher(r1, r2):
     if b1 is None or b2 is None:
         return r1.body == r2.body
 
-    # Allow either body to be a superset after volatile keys are stripped
-    return b1 == b2 or b1.issuperset(b2) or b2.issuperset(b1)
+    # Strict equality check - parameters must match exactly after filtering
+    return b1 == b2
 
 
 def before_record_request(request):
@@ -145,5 +132,10 @@ def use_cassette(vcr_config, request):
         return
 
     cassette_name = marker.args[0]
-    with custom_vcr.use_cassette(cassette_name):
+    # Create VCR instance with provided config and custom matchers
+    test_vcr = vcr.VCR(**vcr_config)
+    test_vcr.register_matcher("uri_ignore_dates", uri_without_dates)
+    test_vcr.register_matcher("body_ignore_dates", form_body_matcher)
+
+    with test_vcr.use_cassette(cassette_name):
         yield
