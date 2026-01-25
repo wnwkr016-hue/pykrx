@@ -1,62 +1,11 @@
 interactions:
 - request:
-    body: indIdx2=001&indIdx=1&strtDd=20260118&endDd=20260125&bld=dbms%2FMDC%2FSTAT%2Fstandard%2FMDCSTAT00301
-    headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
-      - gzip, deflate, br, zstd
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '99'
-      Content-Type:
-      - application/x-www-form-urlencoded
-      Referer:
-      - https://data.krx.co.kr/contents/MDC/MDI/outerLoader/index.cmd
-      User-Agent:
-      - Mozilla/5.0
-    method: POST
-    uri: https://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd
-  response:
-    body:
-      string: '{"output":[{"TRD_DD":"2026/01/23","CLSPRC_IDX":"4,990.07","FLUC_TP_CD":"1","PRV_DD_CMPR":"37.54","UPDN_RATE":"0.76","OPNPRC_IDX":"4,984.08","HGPRC_IDX":"5,021.13","LWPRC_IDX":"4,926.22","ACC_TRDVOL":"612,601,752","ACC_TRDVAL":"30,017,138,130,375","MKTCAP":"4,125,555,096,685,080"},{"TRD_DD":"2026/01/22","CLSPRC_IDX":"4,952.53","FLUC_TP_CD":"1","PRV_DD_CMPR":"42.60","UPDN_RATE":"0.87","OPNPRC_IDX":"4,987.06","HGPRC_IDX":"5,019.54","LWPRC_IDX":"4,934.17","ACC_TRDVOL":"568,624,077","ACC_TRDVAL":"32,919,611,108,208","MKTCAP":"4,095,874,148,435,200"},{"TRD_DD":"2026/01/21","CLSPRC_IDX":"4,909.93","FLUC_TP_CD":"1","PRV_DD_CMPR":"24.18","UPDN_RATE":"0.49","OPNPRC_IDX":"4,808.94","HGPRC_IDX":"4,910.54","LWPRC_IDX":"4,807.13","ACC_TRDVOL":"600,101,467","ACC_TRDVAL":"30,093,031,855,585","MKTCAP":"4,061,917,379,318,616"},{"TRD_DD":"2026/01/20","CLSPRC_IDX":"4,885.75","FLUC_TP_CD":"2","PRV_DD_CMPR":"-18.91","UPDN_RATE":"-0.39","OPNPRC_IDX":"4,900.28","HGPRC_IDX":"4,935.48","LWPRC_IDX":"4,823.88","ACC_TRDVOL":"667,709,207","ACC_TRDVAL":"27,148,846,770,961","MKTCAP":"4,038,612,917,321,370"},{"TRD_DD":"2026/01/19","CLSPRC_IDX":"4,904.66","FLUC_TP_CD":"1","PRV_DD_CMPR":"63.92","UPDN_RATE":"1.32","OPNPRC_IDX":"4,829.40","HGPRC_IDX":"4,917.37","LWPRC_IDX":"4,827.95","ACC_TRDVOL":"570,841,030","ACC_TRDVAL":"25,214,738,198,401","MKTCAP":"4,056,832,202,296,880"}],"CURRENT_DATETIME":"2026.01.25
-        PM 12:09:37"}'
-    headers:
-      Cache-Control:
-      - max-age=0, no-cache, no-store
-      Connection:
-      - keep-alive
-      Content-Encoding:
-      - gzip
-      Content-Length:
-      - '514'
-      Content-Type:
-      - text/html; charset=utf-8
-      Date:
-      - Sun, 25 Jan 2026 03:09:37 GMT
-      Expires:
-      - Sun, 25 Jan 2026 03:09:37 GMT
-      Pragma:
-      - no-cache
-      Set-Cookie:
-      - __smVisitorID=-Sw1EUZ7TLj; Expires=Mon, 25-Jan-2027 03:09:37 GMT; Path=/
-      - __smVisitorID=jlF_tffBI-J; Expires=Mon, 25-Jan-2027 03:09:37 GMT; Path=/
-      - __smVisitorID=gwFkJgMzElo; Expires=Mon, 25-Jan-2027 03:09:37 GMT; Path=/
-      - JSESSIONID=aExH1TlSQ924PQ0r1oTT9pHXJSaCcxIGcSm2jaiP1BssWgrBteLzXMadfJf0hrkG.bWRjX2RvbWFpbi9tZGNvd2FwMS1tZGNhcHAwMQ==;
-        Domain=.krx.co.kr; Path=/; HttpOnly
-      Vary:
-      - Accept-Encoding
-    status:
-      code: 200
-      message: OK
-- request:
     body: bld=dbms%2FMDC%2FSTAT%2Fstandard%2FMDCSTAT04601
     headers:
       Accept:
       - '*/*'
       Accept-Encoding:
-      - gzip, deflate, br, zstd
+      - gzip, deflate
       Connection:
       - keep-alive
       Content-Length:
@@ -4151,7 +4100,7 @@ interactions:
         \uC885\uD569\uCC44\uAD8C(AA-\uC774\uC0C1)\uC561\uD2F0\uBE0C\",\"ISU_ENG_NM\":\"Heungkuk
         HK Total Market Bond(AA- or Higher) Active ETF\",\"LIST_DD\":\"2023/11/28\",\"ETF_OBJ_IDX_NM\":\"KAP
         \uC885\uD569\uCC44\uAD8C AA- \uC774\uC0C1 \uC9C0\uC218(\uCD1D\uC218\uC775)\",\"IDX_CALC_INST_NM1\":\"\uD55C\uAD6D\uC790\uC0B0\uD3C9\uAC00(KAP)\",\"IDX_CALC_INST_NM2\":\"\uC77C\uBC18\",\"ETF_REPLICA_METHD_TP_CD\":\"\uC2E4\uBB3C(\uC561\uD2F0\uBE0C)\",\"IDX_MKT_CLSS_NM\":\"\uAD6D\uB0B4\",\"IDX_ASST_CLSS_NM\":\"\uCC44\uAD8C\",\"LIST_SHRS\":\"1,865,000\",\"COM_ABBRV\":\"\uD765\uAD6D\uC790\uC0B0\uC6B4\uC6A9\",\"CU_QTY\":\"1,000\",\"ETF_TOT_FEE\":\"0.036000\",\"TAX_TP_CD\":\"\uBC30\uB2F9\uC18C\uB4DD\uC138(\uBCF4\uC720\uAE30\uAC04\uACFC\uC138)\"}],\"CURRENT_DATETIME\":\"2026.01.25
-        PM 12:09:37\"}"
+        AM 10:16:00\"}"
     headers:
       Cache-Control:
       - max-age=0, no-cache, no-store
@@ -4163,16 +4112,16 @@ interactions:
       Content-Type:
       - text/html; charset=utf-8
       Date:
-      - Sun, 25 Jan 2026 03:09:38 GMT
+      - Sun, 25 Jan 2026 01:16:01 GMT
       Expires:
-      - Sun, 25 Jan 2026 03:09:38 GMT
+      - Sun, 25 Jan 2026 01:16:01 GMT
       Pragma:
       - no-cache
       Set-Cookie:
-      - __smVisitorID=s76xDyWxchH; Expires=Mon, 25-Jan-2027 03:09:37 GMT; Path=/
-      - __smVisitorID=mYH0ZHh2G0n; Expires=Mon, 25-Jan-2027 03:09:37 GMT; Path=/
-      - __smVisitorID=-ch2aktMT94; Expires=Mon, 25-Jan-2027 03:09:37 GMT; Path=/
-      - JSESSIONID=agqov18V3nxuN3Uw1paEHlQ7oNGus2olcKss3D2DKvlIeWo8t95W3N9t9x71h0D1.bWRjX2RvbWFpbi9tZGNvd2FwMS1tZGNhcHAxMQ==;
+      - __smVisitorID=zxl4r_MDZUq; Expires=Mon, 25-Jan-2027 01:16:00 GMT; Path=/
+      - __smVisitorID=mKzIg7pFvJi; Expires=Mon, 25-Jan-2027 01:16:00 GMT; Path=/
+      - __smVisitorID=zArfHRxdiS5; Expires=Mon, 25-Jan-2027 01:16:00 GMT; Path=/
+      - JSESSIONID=shBqPp1dgGaMgEqwwfXnOAndknJCkM2BcQy28UVuzYDNQaODt8om1i6XcjtUYaIl.bWRjX2RvbWFpbi9tZGNvd2FwMS1tZGNhcHAxMQ==;
         Domain=.krx.co.kr; Path=/; HttpOnly
       Transfer-Encoding:
       - chunked
@@ -4187,7 +4136,7 @@ interactions:
       Accept:
       - '*/*'
       Accept-Encoding:
-      - gzip, deflate, br, zstd
+      - gzip, deflate
       Connection:
       - keep-alive
       Content-Length:
@@ -6526,7 +6475,7 @@ interactions:
         ETN\",\"ISU_ENG_NM\":\"Korea Investment & Securities KIS Platinum futures
         ETN 52\",\"ISU_ENG_ABBRV\":\"KIS Platinum futures ETN\",\"LIST_DD\":\"2021/02/25\",\"LSTTRD_DD\":\"2026/02/20\",\"TRACE_IDX_NM\":\"DJCI
         Platinum(BOK Overnight Call Rate) TR\",\"IDX_CALC_INST_NM\":\"S&P\",\"IDX_LVRG_INVRS_TP_CD\":\"\uC77C\uBC18\",\"ETP_PROD_TP_CD\":\"ETN\",\"IDX_MKT_CLSS_NM\":\"\uD574\uC678\",\"IDX_ASST_CLSS_NM\":\"\uC6D0\uC790\uC7AC\",\"LIST_SHRS\":\"1,000,000\",\"ISUR_NM\":\"\uD55C\uAD6D\uD22C\uC790\uC99D\uAD8C\",\"EXPS_RTO\":\"1.200\",\"TAX_TP_CD\":\"\uBC30\uB2F9\uC18C\uB4DD\uC138(\uBCF4\uC720\uAE30\uAC04\uACFC\uC138)\"}],\"CURRENT_DATETIME\":\"2026.01.25
-        PM 12:09:38\"}"
+        AM 10:16:01\"}"
     headers:
       Cache-Control:
       - max-age=0, no-cache, no-store
@@ -6539,16 +6488,16 @@ interactions:
       Content-Type:
       - text/html; charset=utf-8
       Date:
-      - Sun, 25 Jan 2026 03:09:38 GMT
+      - Sun, 25 Jan 2026 01:16:01 GMT
       Expires:
-      - Sun, 25 Jan 2026 03:09:38 GMT
+      - Sun, 25 Jan 2026 01:16:01 GMT
       Pragma:
       - no-cache
       Set-Cookie:
-      - __smVisitorID=jfYdeRJO-FL; Expires=Mon, 25-Jan-2027 03:09:38 GMT; Path=/
-      - __smVisitorID=VMSk_vJR0kg; Expires=Mon, 25-Jan-2027 03:09:38 GMT; Path=/
-      - __smVisitorID=ZMoDHzOPbYf; Expires=Mon, 25-Jan-2027 03:09:38 GMT; Path=/
-      - JSESSIONID=YeaSgb9Na1IP3fUK1S4XFrnwJXdmGCdVcpTGiZyXt0NdjN2Ht26kzktykvz56mXQ.bWRjX2RvbWFpbi9tZGNvd2FwMS1tZGNhcHAxMQ==;
+      - __smVisitorID=MubBrvLnyPC; Expires=Mon, 25-Jan-2027 01:16:01 GMT; Path=/
+      - __smVisitorID=-_lMqafRLRf; Expires=Mon, 25-Jan-2027 01:16:01 GMT; Path=/
+      - __smVisitorID=Qp-tMtHsGj3; Expires=Mon, 25-Jan-2027 01:16:01 GMT; Path=/
+      - JSESSIONID=XzW1yTRaDCjYNfGOwUpKbuwuchqqbMtocyzMsROXbhCO8es4tArOTQnE1OK7WyKa.bWRjX2RvbWFpbi9tZGNvd2FwMi1tZGNhcHAxMQ==;
         Domain=.krx.co.kr; Path=/; HttpOnly
       Vary:
       - Accept-Encoding
@@ -6561,7 +6510,7 @@ interactions:
       Accept:
       - '*/*'
       Accept-Encoding:
-      - gzip, deflate, br, zstd
+      - gzip, deflate
       Connection:
       - keep-alive
       Content-Length:
@@ -14005,7 +13954,7 @@ interactions:
         \uC8FC\uC2DD\uC6CC\uB7F0\uD2B8\uC99D\uAD8C \uC81CM682\uD638\",\"ISU_ABBRV\":\"\uD55C\uAD6DM682KOSPI200\uD48B\",\"ISU_ENG_NM\":\"KOREA
         INVESTMENT & SECURITIES ELW M682\",\"LIST_DD\":\"2026/01/15\",\"LSTTRD_DD\":\"2026/12/10\",\"EXP_DD\":\"2026/12/14\",\"ELW_ULY_TP_NM\":\"\uC8FC\uAC00\uC9C0\uC218\",\"ULY_NM\":\"\uCF54\uC2A4\uD53C
         200\",\"LIST_SHRS\":\"7,000,000\",\"ISUR_NM\":\"\uD55C\uAD6D\uC99D\uAD8C\",\"ELW_CONV_RTO\":\"100.0\",\"RGHT_TP_NM\":\"\uD48B\",\"ELW_EXER_TP\":\"\uC720\uB7FD\uD615\",\"EXER_PRC\":\"585\",\"LP_NM\":\"\uD55C\uAD6D\uC99D\uAD8C\",\"ORD_SPD_RTO\":\"15\",\"ELW_LST_SETL_METHD\":\"\uD604\uAE08\uACB0\uC81C\"}],\"CURRENT_DATETIME\":\"2026.01.25
-        PM 12:09:38\"}"
+        AM 10:16:01\"}"
     headers:
       Cache-Control:
       - max-age=0, no-cache, no-store
@@ -14017,16 +13966,16 @@ interactions:
       Content-Type:
       - text/html; charset=utf-8
       Date:
-      - Sun, 25 Jan 2026 03:09:38 GMT
+      - Sun, 25 Jan 2026 01:16:01 GMT
       Expires:
-      - Sun, 25 Jan 2026 03:09:38 GMT
+      - Sun, 25 Jan 2026 01:16:01 GMT
       Pragma:
       - no-cache
       Set-Cookie:
-      - __smVisitorID=VkUnU1Q9Ibs; Expires=Mon, 25-Jan-2027 03:09:38 GMT; Path=/
-      - __smVisitorID=zV90WRG4ncQ; Expires=Mon, 25-Jan-2027 03:09:38 GMT; Path=/
-      - __smVisitorID=PIHPBVA4xEc; Expires=Mon, 25-Jan-2027 03:09:38 GMT; Path=/
-      - JSESSIONID=Y0BzUI11CewCOge81iaBsOYska1aaG3HcJerNzbwsLBCP2BOtD54sw9opDjtc9P1.bWRjX2RvbWFpbi9tZGNvd2FwMS1tZGNhcHAwMQ==;
+      - __smVisitorID=5hgTJWn7bPe; Expires=Mon, 25-Jan-2027 01:16:01 GMT; Path=/
+      - __smVisitorID=ZpzkR7Ow5EL; Expires=Mon, 25-Jan-2027 01:16:01 GMT; Path=/
+      - __smVisitorID=ZLJgc6PgrsT; Expires=Mon, 25-Jan-2027 01:16:01 GMT; Path=/
+      - JSESSIONID=XIR78yOV5tyox4MdwOnqId4WHyQzSVSycERsqmY2dHC15wHGtnaYKudRFu0pXiDO.bWRjX2RvbWFpbi9tZGNvd2FwMS1tZGNhcHAwMQ==;
         Domain=.krx.co.kr; Path=/; HttpOnly
       Transfer-Encoding:
       - chunked

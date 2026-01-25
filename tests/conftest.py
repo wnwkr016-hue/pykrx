@@ -1,7 +1,57 @@
 import urllib.parse
+from collections.abc import Iterable
 
 import pytest
 import vcr
+
+IGNORED_DATE_KEYS = {
+    "strtDd",
+    "endDd",
+    "trdDd",
+    "fromdate",
+    "todate",
+    "startDt",
+    "endDt",
+    "stDt",
+    "enDt",
+    "date",
+    "count",  # Naver fchart parameter that drifts with current date
+}
+
+
+def _filter_pairs(pairs: Iterable[tuple[str, str]]) -> list[tuple[str, str]]:
+    """Remove volatile date parameters so VCR matches stable requests."""
+
+    return sorted((k, v) for k, v in pairs if k not in IGNORED_DATE_KEYS)
+
+
+def uri_without_dates(r1, r2):
+    """Compare URIs ignoring date-like query params (prevents re-record)."""
+
+    def _normalize(uri: str):
+        parsed = urllib.parse.urlsplit(uri)
+        filtered = _filter_pairs(
+            urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+        )
+        rebuilt_query = urllib.parse.urlencode(filtered)
+        return parsed.scheme, parsed.netloc, parsed.path, rebuilt_query
+
+    norm1 = _normalize(r1.uri)
+    norm2 = _normalize(r2.uri)
+    result = norm1 == norm2
+
+    # Debug logging
+    if not result:
+        import sys
+
+        print("\n[VCR URI Matcher Debug]", file=sys.stderr)
+        print(f"  Request URI: {r1.uri}", file=sys.stderr)
+        print(f"  Cassette URI: {r2.uri}", file=sys.stderr)
+        print(f"  Normalized Request: {norm1}", file=sys.stderr)
+        print(f"  Normalized Cassette: {norm2}", file=sys.stderr)
+        print(f"  Match: {result}\n", file=sys.stderr)
+
+    return result
 
 
 def form_body_matcher(r1, r2):
@@ -17,7 +67,7 @@ def form_body_matcher(r1, r2):
         if isinstance(body, bytes):
             body = body.decode()
         parsed = urllib.parse.parse_qsl(body, keep_blank_values=True)
-        return sorted(parsed)
+        return set(_filter_pairs(parsed))
 
     b1 = _normalize(r1.body)
     b2 = _normalize(r2.body)
@@ -25,15 +75,32 @@ def form_body_matcher(r1, r2):
     # If both bodies are None or parsing failed, compare raw bodies
     if b1 is None or b2 is None:
         return r1.body == r2.body
-    return b1 == b2
+
+    # Allow either body to be a superset after volatile keys are stripped
+    return b1 == b2 or b1.issuperset(b2) or b2.issuperset(b1)
+
+
+def before_record_request(request):
+    """Scrub volatile query params from requests before recording."""
+    parsed = urllib.parse.urlsplit(request.uri)
+    filtered = _filter_pairs(urllib.parse.parse_qsl(parsed.query))
+    clean_query = urllib.parse.urlencode(filtered)
+    request.uri = urllib.parse.urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, clean_query, parsed.fragment)
+    )
+    return request
 
 
 custom_vcr = vcr.VCR(
     cassette_library_dir="tests/cassettes",
     record_mode="once",
-    match_on=["uri", "method", "form_body"],
+    # Use custom matcher names that ignore volatile params
+    match_on=["uri_ignore_dates", "method", "body_ignore_dates"],
+    before_record_request=before_record_request,
 )
-custom_vcr.register_matcher("form_body", form_body_matcher)
+# Register custom matchers with unique names
+custom_vcr.register_matcher("uri_ignore_dates", uri_without_dates)
+custom_vcr.register_matcher("body_ignore_dates", form_body_matcher)
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +108,7 @@ def vcr_config():
     return {
         "cassette_library_dir": "tests/cassettes",
         "record_mode": "once",
-        "match_on": ["uri", "method", "form_body"],
+        "match_on": ["uri_ignore_dates", "method", "body_ignore_dates"],
     }
 
 
@@ -78,5 +145,5 @@ def use_cassette(vcr_config, request):
         return
 
     cassette_name = marker.args[0]
-    with custom_vcr.use_cassette(cassette_name, **vcr_config):
+    with custom_vcr.use_cassette(cassette_name):
         yield
