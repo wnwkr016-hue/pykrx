@@ -7,8 +7,8 @@ import numpy as np
 
 
 class TestStockBusinessDaysTest:
-    @pytest.mark.cassette("market/stock_business_days_test_every_month.yaml")
-    def test_every_month(self, use_cassette):
+    @pytest.mark.vcr
+    def test_every_month(self):
         year = 2020
         for month in range(1, 13):
             days = stock.get_previous_business_days(year=year, month=month)
@@ -16,10 +16,8 @@ class TestStockBusinessDaysTest:
             assert isinstance(days, list)
             assert isinstance(days[0], pd._libs.tslibs.timestamps.Timestamp)
 
-    @pytest.mark.cassette(
-        "market/stock_business_days_test_days_for_a_specified_period_of_time.yaml"
-    )
-    def test_days_for_a_specified_period_of_time(self, use_cassette):
+    @pytest.mark.vcr
+    def test_days_for_a_specified_period_of_time(self):
         days = stock.get_previous_business_days(fromdate="20200101", todate="20200115")
         assert len(days) != 0
         assert isinstance(days, list)
@@ -27,8 +25,8 @@ class TestStockBusinessDaysTest:
 
 
 class TestStockOhlcvByDateTest:
-    @pytest.mark.cassette("market/stock_ohlcv_by_date_test_ohlcv_simple_call.yaml")
-    def test_ohlcv_simple_call(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_simple_call(self):
         df = stock.get_market_ohlcv_by_date("20210118", "20210126", "005930")
         #               시가    고가    저가    종가      거래량         거래대금  등락률
         # 날짜
@@ -43,14 +41,14 @@ class TestStockOhlcvByDateTest:
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette("market/stock_ohlcv_by_date_test_ohlcv_for_a_day.yaml")
-    def test_ohlcv_for_a_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_for_a_day(self):
         df = stock.get_market_ohlcv_by_date("20210118", "20210118", "005930")
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @pytest.mark.cassette("market/stock_ohlcv_by_date_test_ohlcv_with_adjusted.yaml")
-    def test_ohlcv_with_adjusted(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_with_adjusted(self):
         df = stock.get_market_ohlcv_by_date("20180427", "20180504", "005930")
         #               시가     고가    저가    종가     거래량         거래대금   등락률
         # 날짜
@@ -62,10 +60,8 @@ class TestStockOhlcvByDateTest:
         assert df.loc["2018-04-27"]["시가"] == 53380
         assert df.loc["2018-05-04"]["시가"] == 53000
 
-    @pytest.mark.cassette(
-        "market/stock_ohlcv_by_date_test_ohlcv_with_not_adjusted.yaml"
-    )
-    def test_ohlcv_with_not_adjusted(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_with_not_adjusted(self):
         df = stock.get_market_ohlcv_by_date(
             "20180427", "20180504", "005930", adjusted=False
         )
@@ -81,8 +77,8 @@ class TestStockOhlcvByDateTest:
 
 
 class TestStockOhlcvByTickerTest:
-    @pytest.mark.cassette("market/stock_ohlcv_by_ticker_test_ohlcv_for_a_day.yaml")
-    def test_ohlcv_for_a_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_for_a_day(self):
         df = stock.get_market_ohlcv_by_ticker("20210122")
         #           시가    고가    저가    종가   거래량     거래대금     등락률
         # 티커
@@ -97,10 +93,8 @@ class TestStockOhlcvByTickerTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_ohlcv_by_ticker_test_ohlcv_for_a_day_in_kosdaq.yaml"
-    )
-    def test_ohlcv_for_a_day_in_kosdaq(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_for_a_day_in_kosdaq(self):
         df = stock.get_market_ohlcv_by_ticker("20210122", "KOSDAQ")
         #           시가    고가    저가    종가   거래량     거래대금    등락률
         # 티커
@@ -116,28 +110,22 @@ class TestStockOhlcvByTickerTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_ohlcv_by_ticker_test_ohlcv_for_a_day_on_holiday1.yaml"
-    )
-    def test_ohlcv_for_a_day_on_holiday1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_for_a_day_on_holiday1(self):
         df0 = stock.get_market_ohlcv_by_ticker("20210123", alternative=True)  # Saturday
         df1 = stock.get_market_ohlcv_by_ticker("20210122")  # Friday
         assert (df0 == df1).all(axis=None)
 
-    @pytest.mark.cassette(
-        "market/stock_ohlcv_by_ticker_test_ohlcv_for_a_day_on_holiday2.yaml"
-    )
-    def test_ohlcv_for_a_day_on_holiday2(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_for_a_day_on_holiday2(self):
         df0 = stock.get_market_ohlcv_by_ticker("20210123", alternative=True)  # Saturday
         df1 = stock.get_market_ohlcv_by_ticker("20210122")  # Friday
         assert (df0 == df1).all(axis=None)
 
 
 class TestStockPriceChangeByTicker:
-    @pytest.mark.cassette(
-        "market/stock_price_change_by_ticker_with_valid_business_days.yaml"
-    )
-    def test_with_valid_business_days(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_valid_business_days(self):
         df = stock.get_market_price_change_by_ticker(
             fromdate="20210104", todate="20210111"
         )
@@ -152,16 +140,16 @@ class TestStockPriceChangeByTicker:
         temp = df.iloc[0:5, 1] == np.array([4615, 25150, 4895, 135500, 5680])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("market/stock_price_change_by_ticker_with_holidays.yaml")
-    def test_with_holidays(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holidays(self):
         df = stock.get_market_price_change_by_ticker(
             fromdate="20210710", todate="20210711"
         )
         assert isinstance(df, pd.DataFrame)
         assert df.empty
 
-    @pytest.mark.cassette("market/stock_price_change_by_ticker_with_holiday.yaml")
-    def test_with_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday(self):
         df = stock.get_market_price_change_by_ticker(
             fromdate="20210101", todate="20210111"
         )
@@ -176,8 +164,8 @@ class TestStockPriceChangeByTicker:
         temp = df.iloc[0:5, 1] == np.array([4615, 25150, 4895, 135500, 5680])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("market/stock_price_change_by_ticker_with_dash_dates.yaml")
-    def test_with_dash_dates(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_dash_dates(self):
         df = stock.get_market_price_change_by_ticker(
             fromdate="2021-01-04", todate="20210111"
         )
@@ -190,8 +178,8 @@ class TestStockPriceChangeByTicker:
         temp = df.iloc[0:5, 1] == np.array([4615, 25150, 4895, 135500, 5680])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("market/stock_price_change_by_ticker_with_adjusted.yaml")
-    def test_with_adjusted(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_adjusted(self):
         df_adjusted = stock.get_market_price_change_by_ticker(
             fromdate="20180427", todate="20180504"
         )
@@ -203,8 +191,8 @@ class TestStockPriceChangeByTicker:
         assert samsung_adjusted["시가"] == 52140
         assert samsung_adjusted["종가"] == 51900
 
-    @pytest.mark.cassette("market/stock_price_change_by_ticker_with_not_adjusted.yaml")
-    def test_with_not_adjusted(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_not_adjusted(self):
         df_not_adjusted = stock.get_market_price_change_by_ticker(
             fromdate="20180427", todate="20180504", adjusted=False
         )
@@ -218,10 +206,8 @@ class TestStockPriceChangeByTicker:
 
 
 class TestStockFundamentalByDate:
-    @pytest.mark.cassette(
-        "market/stock_fundamental_by_date_with_valid_business_days.yaml"
-    )
-    def test_with_valid_business_days(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_valid_business_days(self):
         df = stock.get_market_fundamental_by_date("20210104", "20210108", "005930")
         #               BPS    PER   PBR   EPS   DIV   DPS
         # 날짜
@@ -235,8 +221,8 @@ class TestStockFundamentalByDate:
         assert temp.sum() == 6
         assert len(df) == 5
 
-    @pytest.mark.cassette("market/stock_fundamental_by_date_with_a_holiday_1.yaml")
-    def test_with_a_holiday_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_a_holiday_1(self):
         # 20210104 monday / 20210109 saturday
         df = stock.get_market_fundamental_by_date("20210104", "20210109", "005930")
         assert isinstance(df, pd.DataFrame)
@@ -244,8 +230,8 @@ class TestStockFundamentalByDate:
         assert temp.sum() == 6
         assert len(df) == 5
 
-    @pytest.mark.cassette("market/stock_fundamental_by_date_with_holidays.yaml")
-    def test_with_holidays(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holidays(self):
         # 20210103 sunday / 20210110 sunday
         df = stock.get_market_fundamental_by_date("20210103", "20210110", "005930")
         assert isinstance(df, pd.DataFrame)
@@ -253,8 +239,8 @@ class TestStockFundamentalByDate:
         assert temp.sum() == 6
         assert len(df) == 5
 
-    @pytest.mark.cassette("market/stock_fundamental_by_date_with_freq.yaml")
-    def test_with_freq(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_freq(self):
         df = stock.get_market_fundamental_by_date(
             "20200101", "20200430", "005930", freq="m"
         )
@@ -263,8 +249,8 @@ class TestStockFundamentalByDate:
         assert temp.sum() == 6
         assert len(df) == 4
 
-    @pytest.mark.cassette("market/stock_fundamental_by_date_in_kosdaq.yaml")
-    def test_in_kosdaq(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq(self):
         df = stock.get_market_fundamental_by_date("20200101", "20200430", "263720")
         #              BPS    PER   PBR  EPS  DIV  DPS
         # 날짜
@@ -279,10 +265,8 @@ class TestStockFundamentalByDate:
 
 
 class TestStockFundamentalByTicker:
-    @pytest.mark.cassette(
-        "market/stock_fundamental_by_ticker_with_valid_a_business_day.yaml"
-    )
-    def test_with_valid_a_business_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_valid_a_business_day(self):
         # 20210108 friday
         df = stock.get_market_fundamental_by_ticker("20210108")
         #           BPS    PER   PBR   EPS   DIV   DPS
@@ -297,10 +281,8 @@ class TestStockFundamentalByTicker:
         assert temp.sum() == 6
         assert len(df) == 895
 
-    @pytest.mark.cassette(
-        "market/stock_fundamental_by_ticker_with_valid_a_holiday.yaml"
-    )
-    def test_with_valid_a_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_valid_a_holiday(self):
         # 20210109 saturday
         df = stock.get_market_fundamental_by_ticker("20210104")
         assert isinstance(df, pd.DataFrame)
@@ -310,8 +292,8 @@ class TestStockFundamentalByTicker:
 
 
 class TestStockMarketCapByTicker:
-    @pytest.mark.cassette("market/stock_market_cap_by_ticker_with_a_businessday.yaml")
-    def test_with_a_businessday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_a_businessday(self):
         df = stock.get_market_cap_by_ticker("20210104")
         #           종가         시가총액    거래량       거래대금  상장주식수
         # 티커
@@ -325,8 +307,8 @@ class TestStockMarketCapByTicker:
         temp = np.isclose(df.iloc[0:5, 0], [83000, 126000, 889000, 74400, 829000])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("market/stock_market_cap_by_ticker_with_a_holiday.yaml")
-    def test_with_a_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_a_holiday(self):
         df_0 = stock.get_market_cap_by_ticker("20210103")
         df_1 = stock.get_market_cap_by_ticker("20201230")
         # 해당 연휴에 상폐된 종목이 없기 때문에 두 index를 비교해 봄
@@ -335,10 +317,8 @@ class TestStockMarketCapByTicker:
 
 
 class TestStockNetPurchasesOfEquitiesByTickerTest:
-    @pytest.mark.cassette(
-        "market/stock_net_purchases_of_equities_by_ticker_test_net_purchases_of_equities_is_same_0.yaml"
-    )
-    def test_net_purchases_of_equities_is_same_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_net_purchases_of_equities_is_same_0(self):
         df = stock.get_market_net_purchases_of_equities_by_ticker(
             "20210115", "20210122"
         )
@@ -358,10 +338,8 @@ class TestStockNetPurchasesOfEquitiesByTickerTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_net_purchases_of_equities_by_ticker_test_net_purchases_of_equities_is_same_1.yaml"
-    )
-    def test_net_purchases_of_equities_is_same_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_net_purchases_of_equities_is_same_1(self):
         #               종목명  매도거래량  매수거래량 순매수거래량   매도거래대금   매수거래대금 순매수거래대금
         #   티커
         # 034730            SK      456805      585912       129107   146275554500   188418240500    42142686000
@@ -381,10 +359,8 @@ class TestStockNetPurchasesOfEquitiesByTickerTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_net_purchases_of_equities_by_ticker_test_net_purchases_of_equities_is_same_2.yaml"
-    )
-    def test_net_purchases_of_equities_is_same_2(self, use_cassette):
+    @pytest.mark.vcr
+    def test_net_purchases_of_equities_is_same_2(self):
         #               종목명  매도거래량  매수거래량 순매수거래량   매도거래대금   매수거래대금 순매수거래대금
         #   티커
         # 095570    AJ네트웍스     2088907     2088907            0     8914353675     8914353675              0
@@ -404,10 +380,8 @@ class TestStockNetPurchasesOfEquitiesByTickerTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_net_purchases_of_equities_by_ticker_test_net_purchases_of_equities_is_same_in_kosdaq.yaml"
-    )
-    def test_net_purchases_of_equities_is_same_in_kosdaq(self, use_cassette):
+    @pytest.mark.vcr
+    def test_net_purchases_of_equities_is_same_in_kosdaq(self):
         #               종목명  매도거래량  매수거래량 순매수거래량   매도거래대금   매수거래대금 순매수거래대금
         #   티커
         # 236810        엔비티    10896787    12917977      2021190   441165915800   529418663600    88252747800
@@ -427,10 +401,8 @@ class TestStockNetPurchasesOfEquitiesByTickerTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_net_purchases_of_equities_by_ticker_test_net_purchases_of_equities_is_same_in_konex.yaml"
-    )
-    def test_net_purchases_of_equities_is_same_in_konex(self, use_cassette):
+    @pytest.mark.vcr
+    def test_net_purchases_of_equities_is_same_in_konex(self):
         #                      종목명  매도거래량  매수거래량 순매수거래량   매도거래대금   매수거래대금 순매수거래대금
         #   티커
         # 140610   엔솔바이오사이언스      181980      222487        40507     3120731650     3812653350      691921700
@@ -452,10 +424,8 @@ class TestStockNetPurchasesOfEquitiesByTickerTest:
 
 
 class TestStockTradingVolumeByInvestorTest:
-    @pytest.mark.cassette(
-        "market/stock_trading_volume_by_investor_test_trading_volume_is_same_0.yaml"
-    )
-    def test_trading_volume_is_same_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_volume_is_same_0(self):
         #                 매도       매수    순매수
         # 투자자구분
         # 금융투자    29455909   26450600  -3005309
@@ -473,10 +443,8 @@ class TestStockTradingVolumeByInvestorTest:
         temp = df.index[0:5] == np.array(["금융투자", "보험", "투신", "사모", "은행"])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_trading_volume_by_investor_test_trading_volume_is_same_1.yaml"
-    )
-    def test_trading_volume_is_same_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_volume_is_same_1(self):
         #                  매도        매수    순매수
         # 투자자구분
         # 금융투자    137969209   127697577 -10271632
@@ -492,10 +460,8 @@ class TestStockTradingVolumeByInvestorTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_trading_volume_by_investor_test_trading_volume_is_same_2.yaml"
-    )
-    def test_trading_volume_is_same_2(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_volume_is_same_2(self):
         #                   매도         매수     순매수
         # 투자자구분
         # 금융투자    1857447354   1660620713 -196826641
@@ -513,10 +479,8 @@ class TestStockTradingVolumeByInvestorTest:
 
 
 class TestStockTradingValueByInvestorTest:
-    @pytest.mark.cassette(
-        "market/stock_trading_value_by_investor_test_trading_value_is_same_0.yaml"
-    )
-    def test_trading_value_is_same_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_0(self):
         #                      매도            매수         순매수
         # 투자자구분
         # 금융투자    2580964135000   2309054317700  -271909817300
@@ -534,10 +498,8 @@ class TestStockTradingValueByInvestorTest:
         temp = df.index[0:5] == np.array(["금융투자", "보험", "투신", "사모", "은행"])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_trading_value_by_investor_test_trading_value_is_same_1.yaml"
-    )
-    def test_trading_value_is_same_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_1(self):
         #                       매도             매수         순매수
         # 투자자구분
         # 금융투자     9827334289654    9294592831462  -532741458192
@@ -551,10 +513,8 @@ class TestStockTradingValueByInvestorTest:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette(
-        "market/stock_trading_value_by_investor_test_trading_value_is_same_2.yaml"
-    )
-    def test_trading_value_is_same_2(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_2(self):
         #                       매도             매수         순매수
         # 투자자구분
         # 금융투자    15985568261831   15006116511544  -979451750287
@@ -572,10 +532,8 @@ class TestStockTradingValueByInvestorTest:
 
 
 class TestStockTradingValueByDateTest:
-    @pytest.mark.cassette(
-        "market/stock_trading_value_by_date_test_trading_value_is_same_0.yaml"
-    )
-    def test_trading_value_is_same_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_0(self):
         #                 기관합계     기타법인          개인    외국인합계  전체
         # 날짜
         # 2021-01-15 -440769209300  25442287800  661609085600 -246282164100     0
@@ -592,10 +550,8 @@ class TestStockTradingValueByDateTest:
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette(
-        "market/stock_trading_value_by_date_test_trading_value_is_same_1.yaml"
-    )
-    def test_trading_value_is_same_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_1(self):
         #                  기관합계     기타법인           개인    외국인합계  전체
         # 날짜
         # 2021-01-15 -1414745885546  54444293672  2113924037705 -753622445831     0
@@ -611,10 +567,8 @@ class TestStockTradingValueByDateTest:
         assert isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
-    @pytest.mark.cassette(
-        "market/stock_trading_value_by_date_test_trading_value_is_same_2.yaml"
-    )
-    def test_trading_value_is_same_2(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_2(self):
         #                  기관합계     기타법인           개인    외국인합계  전체
         # 날짜
         # 2021-01-15 -1536570309441  63110174617  2251672617980 -778212483156     0
@@ -632,10 +586,8 @@ class TestStockTradingValueByDateTest:
         assert isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
-    @pytest.mark.cassette(
-        "market/stock_trading_value_by_date_test_trading_value_is_same_3.yaml"
-    )
-    def test_trading_value_is_same_3(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_3(self):
         #                  기관합계     기타법인           개인    외국인합계  전체
         # 날짜
         # 2021-01-31 -4542136360183  98264910507  4883844366239 -439972916563     0
@@ -651,10 +603,8 @@ class TestStockTradingValueByDateTest:
 
 
 class TestStockTradingVolumeByDateTest:
-    @pytest.mark.cassette(
-        "market/stock_trading_volume_by_date_test_trading_value_is_same_0.yaml"
-    )
-    def test_trading_value_is_same_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_0(self):
         #            기관합계 기타법인    개인 외국인합계  전체
         # 날짜
         # 2021-01-15 -5006115  288832  7485785   -2768502     0
@@ -671,10 +621,8 @@ class TestStockTradingVolumeByDateTest:
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette(
-        "market/stock_trading_volume_by_date_test_trading_value_is_same_1.yaml"
-    )
-    def test_trading_value_is_same_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_1(self):
         #             기관합계 기타법인      개인 외국인합계  전체
         # 날짜
         # 2021-01-15 -20393142  8435634  29119751  -17162243     0
@@ -690,10 +638,8 @@ class TestStockTradingVolumeByDateTest:
         assert isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
-    @pytest.mark.cassette(
-        "market/stock_trading_volume_by_date_test_trading_value_is_same_2.yaml"
-    )
-    def test_trading_value_is_same_2(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_2(self):
         #             기관합계 기타법인      개인 외국인합계  전체
         # 날짜
         # 2021-01-15 -26571037  8455599  37942108  -19826670     0
@@ -711,10 +657,8 @@ class TestStockTradingVolumeByDateTest:
         assert isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
 
-    @pytest.mark.cassette(
-        "market/stock_trading_volume_by_date_test_trading_value_is_same_3.yaml"
-    )
-    def test_trading_value_is_same_3(self, use_cassette):
+    @pytest.mark.vcr
+    def test_trading_value_is_same_3(self):
         #              기관합계 기타법인       개인  외국인합계  전체
         # 날짜
         # 2021-01-31 -258249088  1167570  261341862    -4260344     0
@@ -728,10 +672,8 @@ class TestStockTradingVolumeByDateTest:
 
 
 class TestStockExhaustionRatesOfForeignInvestmentByTickerTest:
-    @pytest.mark.cassette(
-        "market/stock_exhaustion_rates_of_foreign_investment_by_ticker_test_kospi_for_specific_day.yaml"
-    )
-    def test_kospi_for_specific_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_kospi_for_specific_day(self):
         df = stock.get_exhaustion_rates_of_foreign_investment_by_ticker(
             "20210118", "KOSPI"
         )
@@ -743,10 +685,8 @@ class TestStockExhaustionRatesOfForeignInvestmentByTickerTest:
 
 
 class TestStockExhaustionRatesOfForeignInvestmentByDateTest:
-    @pytest.mark.cassette(
-        "market/stock_exhaustion_rates_of_foreign_investment_by_date_test_kospi_for_specific_day.yaml"
-    )
-    def test_kospi_for_specific_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_kospi_for_specific_day(self):
         df = stock.get_exhaustion_rates_of_foreign_investment_by_date(
             "20200120", "20200120", "005930"
         )

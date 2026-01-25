@@ -1,5 +1,7 @@
 import urllib.parse
 from collections.abc import Iterable
+from contextlib import ExitStack
+from pathlib import Path
 
 import pytest
 import vcr
@@ -51,10 +53,25 @@ def form_body_matcher(r1, r2):
     def _normalize(body):
         if body is None:
             return None
+        if isinstance(body, dict) and "string" in body:
+            body = body["string"]
         if isinstance(body, bytes):
-            body = body.decode()
-        parsed = urllib.parse.parse_qsl(body, keep_blank_values=True)
-        return set(_filter_pairs(parsed))
+            try:
+                body = body.decode("utf-8")
+            except UnicodeDecodeError:
+                # Fallback for binary bodies that aren't form data
+                return body
+
+        # If body is not a string at this point (e.g. binary data that failed decode),
+        # return it as is, or empty set if it's empty
+        if not isinstance(body, str):
+            return body
+
+        try:
+            parsed = urllib.parse.parse_qsl(body, keep_blank_values=True)
+            return set(_filter_pairs(parsed))
+        except Exception:
+            return body
 
     b1 = _normalize(r1.body)
     b2 = _normalize(r2.body)
@@ -64,11 +81,36 @@ def form_body_matcher(r1, r2):
         return r1.body == r2.body
 
     # Strict equality check - parameters must match exactly after filtering
-    return b1 == b2
+    try:
+        return b1 == b2
+    except Exception:
+        return r1.body == r2.body
 
 
 def before_record_request(request):
     """Scrub volatile query params from requests before recording."""
+
+    # Prevent caching of requests that are already in common cassettes
+    # This simulates "read-only" inheritance from common cassettes when using new_episodes mode.
+    # If we don't filter these, new_episodes will re-record them into the test-specific cassette.
+    if request.body:
+        body_str = request.body
+        if isinstance(body_str, bytes):
+            body_str = body_str.decode("utf-8", "ignore")
+
+        # BLD codes found in common cassettes
+        COMMON_BLDS = [
+            "finder_stkisu",  # finder_init.yaml
+            "finder_listdelisu",  # finder_init.yaml
+            "MDCSTAT04601",  # etx_ticker_init.yaml
+            "MDCSTAT06701",  # index_kind_init.yaml
+            "MDCSTAT08501",  # index_kind_init.yaml
+        ]
+
+        for bld in COMMON_BLDS:
+            if bld in body_str:
+                return None  # Do not record this request
+
     parsed = urllib.parse.urlsplit(request.uri)
     filtered = _filter_pairs(urllib.parse.parse_qsl(parsed.query))
     clean_query = urllib.parse.urlencode(filtered)
@@ -78,64 +120,59 @@ def before_record_request(request):
     return request
 
 
-custom_vcr = vcr.VCR(
-    cassette_library_dir="tests/cassettes",
-    record_mode="once",
-    # Use custom matcher names that ignore volatile params
-    match_on=["uri_ignore_dates", "method", "body_ignore_dates"],
-    before_record_request=before_record_request,
-)
-# Register custom matchers with unique names
-custom_vcr.register_matcher("uri_ignore_dates", uri_without_dates)
-custom_vcr.register_matcher("body_ignore_dates", form_body_matcher)
+# Get absolute path to cassettes directory
+CASSETTE_DIR = str(Path(__file__).parent / "cassettes")
+COMMON_CASSETTE_DIR = str(Path(__file__).parent / "cassettes" / "common")
+
+# Register custom matchers globally for ALL VCR instances
+# This needs to be done at module level before pytest-vcr creates VCR instances
+_global_vcr = vcr.VCR()
+_global_vcr.register_matcher("uri_ignore_dates", uri_without_dates)
+_global_vcr.register_matcher("body_ignore_dates", form_body_matcher)
+
+
+@pytest.fixture(scope="module")
+def vcr_cassette_dir():
+    """pytest-vcr: cassette directory location"""
+    return CASSETTE_DIR
+
+
+@pytest.fixture(scope="function")
+def vcr(vcr):
+    """pytest-vcr: Override VCR instance to register custom matchers and load shared cassettes."""
+    vcr.register_matcher("uri_ignore_dates", uri_without_dates)
+    vcr.register_matcher("body_ignore_dates", form_body_matcher)
+
+    # 공통 ticker 초기화 호출을 재사용해 cassette 크기를 줄인다.
+    common_cassettes = [
+        Path(COMMON_CASSETTE_DIR) / "etx_ticker_init.yaml",
+        Path(COMMON_CASSETTE_DIR) / "finder_init.yaml",
+        Path(COMMON_CASSETTE_DIR) / "index_kind_init.yaml",
+    ]
+
+    stack = ExitStack()
+    try:
+        for cassette_path in common_cassettes:
+            if cassette_path.exists():
+                stack.enter_context(
+                    vcr.use_cassette(
+                        str(cassette_path),
+                        record_mode="none",  # 공통 cassette은 읽기 전용으로 사용
+                        allow_playback_repeats=True,  # 중복 요청 허용
+                        match_on=["uri_ignore_dates", "method", "body_ignore_dates"],
+                    )
+                )
+        yield vcr
+    finally:
+        stack.close()
 
 
 @pytest.fixture(scope="module")
 def vcr_config():
+    """pytest-vcr: VCR configuration with custom matchers"""
     return {
-        "cassette_library_dir": "tests/cassettes",
-        "record_mode": "once",
+        "record_mode": "once",  # [User Requirement] External requests must be 0
         "match_on": ["uri_ignore_dates", "method", "body_ignore_dates"],
+        "before_record_request": before_record_request,
+        "decode_compressed_response": False,  # 응답을 압축된 상태(gzip)로 저장해 파일 크기 감소
     }
-
-
-@pytest.fixture
-def use_cassette(vcr_config, request):
-    """
-    Pytest fixture that conditionally wraps a test in a vcrpy cassette.
-    If the requesting test is marked with @pytest.mark.cassette('<name>'),
-    this fixture creates a vcr.VCR(**vcr_config) and uses its use_cassette
-    context manager with the provided cassette name for the duration of the
-    test. If no such marker is present, the fixture yields without applying
-    any cassette.
-    Parameters
-    ----------
-    vcr_config : dict
-        Keyword arguments forwarded to vcr.VCR(...) when creating the VCR
-        instance (e.g., serializer, cassette_library_dir, record_mode).
-    request : _pytest.fixtures.FixtureRequest
-        Pytest request object used to inspect the test for a 'cassette' marker.
-    Yields
-    ------
-    None
-        Control is yielded to the test body; teardown occurs after the test
-        completes and after the cassette context (if any) exits.
-    Notes
-    -----
-    The cassette name is taken from the first positional argument of the
-    'cassette' marker. Any exceptions raised by the test propagate normally.
-    """
-    """자동으로 cassette을 적용하는 fixture"""
-    marker = request.node.get_closest_marker("cassette")
-    if not marker:
-        yield
-        return
-
-    cassette_name = marker.args[0]
-    # Create VCR instance with provided config and custom matchers
-    test_vcr = vcr.VCR(**vcr_config)
-    test_vcr.register_matcher("uri_ignore_dates", uri_without_dates)
-    test_vcr.register_matcher("body_ignore_dates", form_body_matcher)
-
-    with test_vcr.use_cassette(cassette_name):
-        yield
