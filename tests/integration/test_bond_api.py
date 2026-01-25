@@ -7,14 +7,14 @@ import numpy as np
 
 
 class TestBondOtcTreasuryYiledByTicker:
-    @pytest.mark.cassette("bond/yields_by_ticker_holiday_20220202.yaml")
-    def test_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_holiday(self):
         df = bond.get_otc_treasury_yields("20220202")
         assert len(df) != 0
         assert isinstance(df, pd.DataFrame)
 
-    @pytest.mark.cassette("bond/yields_by_ticker_business_20220204.yaml")
-    def test_business_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_business_day(self):
         df = bond.get_otc_treasury_yields("20220204")
         #              수익률   대비
         # 채권종류
@@ -28,8 +28,8 @@ class TestBondOtcTreasuryYiledByTicker:
 
 
 class TestBondOtcTreasuryYiledByDate:
-    @pytest.mark.cassette("bond/yields_by_date_20220104_20220203.yaml")
-    def test_business_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_business_day(self):
         df = bond.get_otc_treasury_yields("20220104", "20220203", "국고채1년")
         assert len(df) != 0
         assert isinstance(df, pd.DataFrame)

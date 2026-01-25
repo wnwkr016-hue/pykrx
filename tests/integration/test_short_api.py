@@ -7,8 +7,8 @@ import numpy as np
 
 
 class TestShortStatusByDate:
-    @pytest.mark.cassette("short/short_status_by_date_with_a_business_day.yaml")
-    def test_with_a_business_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_a_business_day(self):
         df = stock.get_shorting_status_by_date("20210104", "20210108", "005930")
         #           거래량 잔고수량   거래대금      잔고금액
         # 날짜
@@ -22,24 +22,24 @@ class TestShortStatusByDate:
         assert temp.sum() == 5
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette("short/short_status_by_date_with_a_holiday.yaml")
-    def test_with_a_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_a_holiday(self):
         df = stock.get_shorting_status_by_date("20210104", "20210109", "005930")
         assert isinstance(df, pd.DataFrame)
         temp = df.iloc[0:5, 0] == np.array([9279, 169, 967, 763, 6])
         assert temp.sum() == 5
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette("short/short_status_by_date_with_holidays.yaml")
-    def test_with_holidays(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holidays(self):
         df = stock.get_shorting_status_by_date("20210103", "20210109", "005930")
         assert isinstance(df, pd.DataFrame)
         temp = df.iloc[0:5, 0] == np.array([9279, 169, 967, 763, 6])
         assert temp.sum() == 5
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette("short/short_status_by_date_in_kosdaq.yaml")
-    def test_in_kosdaq(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq(self):
         df = stock.get_shorting_status_by_date("20210103", "20210109", "017550")
         #          거래량 잔고수량 거래대금   잔고금액
         # 날짜
@@ -55,8 +55,8 @@ class TestShortStatusByDate:
 
 
 class TestShortVolumeByTicker:
-    @pytest.mark.cassette("short/short_volume_by_ticker_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_volume_by_ticker("20210125")
         #        공매도     매수  비중
         # 티커
@@ -73,15 +73,15 @@ class TestShortVolumeByTicker:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_volume_by_ticker_with_holiday.yaml")
-    def test_with_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday(self):
         df_0 = stock.get_shorting_volume_by_ticker("20210103", alternative=True)
         df_1 = stock.get_shorting_volume_by_ticker("20201230")
         same = (df_0 == df_1).all(axis=None)
         assert same
 
-    @pytest.mark.cassette("short/short_volume_by_ticker_in_kosdaq_0.yaml")
-    def test_in_kosdaq_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq_0(self):
         df = stock.get_shorting_volume_by_ticker("20210104", market="KOSDAQ")
         #       공매도    매수      비중
         # 티커
@@ -96,8 +96,8 @@ class TestShortVolumeByTicker:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_volume_by_ticker_in_kosdaq_1.yaml")
-    def test_in_kosdaq_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq_1(self):
         df = stock.get_shorting_volume_by_ticker("20210104", "KOSDAQ")
         #       공매도    매수      비중
         # 티커
@@ -112,8 +112,8 @@ class TestShortVolumeByTicker:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_volume_by_ticker_in_konex.yaml")
-    def test_in_konex(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_konex(self):
         df = stock.get_shorting_volume_by_ticker("20210104", market="KONEX")
         #      공매도  매수 비중
         # 티커
@@ -130,8 +130,8 @@ class TestShortVolumeByTicker:
 
 
 class TestShortValueByTicker:
-    @pytest.mark.cassette("short/short_value_by_ticker_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_value_by_ticker("20210125")
         #            공매도         매수      비중
         # 티커
@@ -150,8 +150,8 @@ class TestShortValueByTicker:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_value_by_ticker_with_holiday.yaml")
-    def test_with_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday(self):
         df_0 = stock.get_shorting_value_by_ticker("20210103", alternative=True)
         df_1 = stock.get_shorting_value_by_ticker("20201230")
         same = (df_0 == df_1).all(axis=None)
@@ -159,8 +159,8 @@ class TestShortValueByTicker:
 
 
 class TestShortVolumeByDate:
-    @pytest.mark.cassette("short/short_volume_by_date_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_volume_by_date("20210104", "20210108", "005930")
         #           공매도      매수      비중
         # 날짜
@@ -174,8 +174,8 @@ class TestShortVolumeByDate:
         temp = df.iloc[0:5, 0] == np.array([9279, 169, 967, 763, 6])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_volume_by_date_with_holiday_0.yaml")
-    def test_with_holiday_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_0(self):
         # 20210103 sunday / 20210108 friday
         df = stock.get_shorting_volume_by_date("20210103", "20210108", "005930")
         assert isinstance(df, pd.DataFrame)
@@ -183,8 +183,8 @@ class TestShortVolumeByDate:
         temp = df.iloc[0:5, 0] == np.array([9279, 169, 967, 763, 6])
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_volume_by_date_with_holiday_1.yaml")
-    def test_with_holiday_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_1(self):
         # 20210103 sunday / 20210109 friday
         df = stock.get_shorting_volume_by_date("20210103", "20210109", "005930")
         assert isinstance(df, pd.DataFrame)
@@ -194,8 +194,8 @@ class TestShortVolumeByDate:
 
 
 class TestShortValueByDate:
-    @pytest.mark.cassette("short/short_value_by_date_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_value_by_date("20210104", "20210108", "005930")
         #                공매도           매수  비중
         # 날짜
@@ -211,8 +211,8 @@ class TestShortValueByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_value_by_date_with_holiday_0.yaml")
-    def test_with_holiday_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_0(self):
         # 20210103 sunday / 20210108 friday
         df = stock.get_shorting_value_by_date("20210103", "20210108", "005930")
         assert isinstance(df, pd.DataFrame)
@@ -221,8 +221,8 @@ class TestShortValueByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_value_by_date_with_holiday_1.yaml")
-    def test_with_holiday_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_1(self):
         # 20210103 sunday / 20210109 friday
         df = stock.get_shorting_value_by_date("20210103", "20210109", "005930")
         assert isinstance(df, pd.DataFrame)
@@ -234,8 +234,8 @@ class TestShortValueByDate:
 
 
 class TestShortInvestorVolumeByDate:
-    @pytest.mark.cassette("short/short_investor_volume_by_date_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_investor_volume_by_date("20200106", "20200110")
         #                기관    개인    외국인  기타    합계
         # 날짜
@@ -251,8 +251,8 @@ class TestShortInvestorVolumeByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_investor_volume_by_date_with_holiday_0.yaml")
-    def test_with_holiday_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_0(self):
         # 20210103 sunday / 20210108 friday
         df = stock.get_shorting_investor_volume_by_date("20200105", "20200110")
         assert isinstance(df, pd.DataFrame)
@@ -262,8 +262,8 @@ class TestShortInvestorVolumeByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_investor_volume_by_date_with_holiday_1.yaml")
-    def test_with_holiday_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_1(self):
         # 20210103 sunday / 20210109 friday
         df = stock.get_shorting_investor_volume_by_date("20200105", "20200111")
         assert isinstance(df, pd.DataFrame)
@@ -275,8 +275,8 @@ class TestShortInvestorVolumeByDate:
 
 
 class TestShortInvestorValueByDate:
-    @pytest.mark.cassette("short/short_investor_value_by_date_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_investor_value_by_date("20200106", "20200110")
         #                     기관        개인        외국인  기타        합계
         # 날짜
@@ -292,8 +292,8 @@ class TestShortInvestorValueByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_investor_value_by_date_with_holiday_0.yaml")
-    def test_with_holiday_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_0(self):
         # 20210103 sunday / 20210108 friday
         df = stock.get_shorting_investor_value_by_date("20200105", "20200110")
         assert isinstance(df, pd.DataFrame)
@@ -303,8 +303,8 @@ class TestShortInvestorValueByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_investor_value_by_date_with_holiday_1.yaml")
-    def test_with_holiday_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_1(self):
         # 20210103 sunday / 20210109 friday
         df = stock.get_shorting_investor_value_by_date("20200105", "20200111")
         assert isinstance(df, pd.DataFrame)
@@ -316,62 +316,62 @@ class TestShortInvestorValueByDate:
 
 
 class TestShortVolumeTop50:
-    @pytest.mark.cassette("short/short_volume_top50_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_volume_top50("20200106")
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 50
 
-    @pytest.mark.cassette("short/short_volume_top50_with_holiday.yaml")
-    def test_with_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday(self):
         # 20200105 sunday
         df = stock.get_shorting_volume_top50("20200105")
         assert isinstance(df, pd.DataFrame)
         assert df.empty
 
-    @pytest.mark.cassette("short/short_volume_top50_in_kosdaq_0.yaml")
-    def test_in_kosdaq_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq_0(self):
         df = stock.get_shorting_volume_top50("20200106", market="KOSDAQ")
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 50
 
-    @pytest.mark.cassette("short/short_volume_top50_in_kosdaq_1.yaml")
-    def test_in_kosdaq_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq_1(self):
         df = stock.get_shorting_volume_top50("20200106", "KOSDAQ")
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 50
 
 
 class TestShortBalanceTop50:
-    @pytest.mark.cassette("short/short_balance_top50_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_balance_top50("20200106")
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 50
 
-    @pytest.mark.cassette("short/short_balance_top50_with_holiday.yaml")
-    def test_with_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday(self):
         # 20200105 sunday
         df = stock.get_shorting_balance_top50("20200105")
         assert isinstance(df, pd.DataFrame)
         assert df.empty
 
-    @pytest.mark.cassette("short/short_balance_top50_in_kosdaq_0.yaml")
-    def test_in_kosdaq_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq_0(self):
         df = stock.get_shorting_balance_top50("20200106", market="KOSDAQ")
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 50
 
-    @pytest.mark.cassette("short/short_balance_top50_in_kosdaq_1.yaml")
-    def test_in_kosdaq_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_in_kosdaq_1(self):
         df = stock.get_shorting_balance_top50("20200106", "KOSDAQ")
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 50
 
 
 class TestShortBalanceByTicker:
-    @pytest.mark.cassette("short/short_balance_by_ticker_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_balance_by_ticker("20210127")
         #         공매도잔고   상장주식수  공매도금액      시가총액      비중
         # 티커
@@ -390,8 +390,8 @@ class TestShortBalanceByTicker:
 
 
 class TestShortBalanceByDate:
-    @pytest.mark.cassette("short/short_balance_by_date_with_default_param.yaml")
-    def test_with_default_param(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_default_param(self):
         df = stock.get_shorting_balance_by_date("20200106", "20200110", "005930")
         #          공매도잔고  상장주식수    공매도금액      시가총액      비중
         # 날짜
@@ -407,8 +407,8 @@ class TestShortBalanceByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_balance_by_date_with_holiday_0.yaml")
-    def test_with_holiday_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_0(self):
         df = stock.get_shorting_balance_by_date("20200105", "20200110", "005930")
         assert isinstance(df, pd.DataFrame)
         assert df.index[0] < df.index[-1]
@@ -417,8 +417,8 @@ class TestShortBalanceByDate:
         )
         assert temp.sum() == 5
 
-    @pytest.mark.cassette("short/short_balance_by_date_with_holiday_1.yaml")
-    def test_with_holiday_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holiday_1(self):
         df = stock.get_shorting_balance_by_date("20200105", "20200111", "005930")
         assert isinstance(df, pd.DataFrame)
         assert df.index[0] < df.index[-1]

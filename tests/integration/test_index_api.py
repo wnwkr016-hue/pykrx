@@ -7,36 +7,36 @@ import numpy as np
 
 
 class TestIndexTickerList:
-    @pytest.mark.cassette("index/index_ticker_list_index_list_for_a_specific_day.yaml")
-    def test_index_list_for_a_specific_day(self, use_cassette):
+    @pytest.mark.vcr
+    def test_index_list_for_a_specific_day(self):
         tickers = stock.get_index_ticker_list("20210118")
         assert isinstance(tickers, list)
         assert len(tickers) > 0
         assert tickers[0] == "1001"
 
-    @pytest.mark.cassette("index/index_ticker_list_index_list_for_a_holiday.yaml")
-    def test_index_list_for_a_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_index_list_for_a_holiday(self):
         tickers = stock.get_index_ticker_list("20210130")
         assert isinstance(tickers, list)
         assert len(tickers) > 0
         assert tickers[0] == "1001"
 
-    @pytest.mark.cassette("index/index_ticker_list_index_list_in_kosdaq.yaml")
-    def test_index_list_in_kosdaq(self, use_cassette):
+    @pytest.mark.vcr
+    def test_index_list_in_kosdaq(self):
         tickers = stock.get_index_ticker_list("20210130", "KOSDAQ")
         assert isinstance(tickers, list)
         assert len(tickers) > 0
         assert tickers[0] == "2001"
 
-    @pytest.mark.cassette("index/index_ticker_list_index_list_in_theme.yaml")
-    def test_index_list_in_theme(self, use_cassette):
+    @pytest.mark.vcr
+    def test_index_list_in_theme(self):
         tickers = stock.get_index_ticker_list("20210130", "테마")
         assert isinstance(tickers, list)
         assert len(tickers) > 0
         assert tickers[0] == "1163"
 
-    @pytest.mark.cassette("index/index_ticker_list_index_name.yaml")
-    def test_index_name(self, use_cassette):
+    @pytest.mark.vcr
+    def test_index_name(self):
         name = stock.get_index_ticker_name("1001")
         assert name == "코스피"
         name = stock.get_index_ticker_name("2001")
@@ -46,10 +46,8 @@ class TestIndexTickerList:
 
 
 class TestIndexPortfolioDepositFile:
-    @pytest.mark.cassette(
-        "index/index_portfolio_deposit_file_pdf_list_width_default_params.yaml"
-    )
-    def test_pdf_list_width_default_params(self, use_cassette):
+    @pytest.mark.vcr
+    def test_pdf_list_width_default_params(self):
         tickers = stock.get_index_portfolio_deposit_file("1001")
         assert isinstance(tickers, list)
         assert len(tickers) > 0
@@ -62,10 +60,8 @@ class TestIndexPortfolioDepositFile:
         assert isinstance(tickers, list)
         assert len(tickers) > 0
 
-    @pytest.mark.cassette(
-        "index/index_portfolio_deposit_file_pdf_list_in_businessday.yaml"
-    )
-    def test_pdf_list_in_businessday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_pdf_list_in_businessday(self):
         tickers = stock.get_index_portfolio_deposit_file("1001", "20210129")
         assert isinstance(tickers, list)
         assert len(tickers) == 796
@@ -74,10 +70,8 @@ class TestIndexPortfolioDepositFile:
         assert isinstance(tickers, list)
         assert len(tickers) == 760
 
-    @pytest.mark.cassette(
-        "index/index_portfolio_deposit_file_pdf_list_prior_to_20140501.yaml"
-    )
-    def test_pdf_list_prior_to_20140501(self, use_cassette):
+    @pytest.mark.vcr
+    def test_pdf_list_prior_to_20140501(self):
         tickers = stock.get_index_portfolio_deposit_file("1001", "20140429")
         # KRX web server does NOT provide data prior to 2014/05/01.
         assert isinstance(tickers, list)
@@ -85,8 +79,8 @@ class TestIndexPortfolioDepositFile:
 
 
 class TestIndexOhlcvByDate:
-    @pytest.mark.cassette("index/index_ohlcv_by_date_ohlcv_simple.yaml")
-    def test_ohlcv_simple(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_simple(self):
         df = stock.get_index_ohlcv_by_date("20210101", "20210130", "1001")
         #                시가     고가     저가     종가      거래량         거래대금
         # 날짜
@@ -103,14 +97,14 @@ class TestIndexOhlcvByDate:
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette("index/index_ohlcv_by_date_ohlcv_in_holiday.yaml")
-    def test_ohlcv_in_holiday(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_in_holiday(self):
         df = stock.get_index_ohlcv_by_date("20210101", "20210101", "1001")
         assert isinstance(df, pd.DataFrame)
         assert df.empty
 
-    @pytest.mark.cassette("index/index_ohlcv_by_date_ohlcv_with_freq.yaml")
-    def test_ohlcv_with_freq(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_with_freq(self):
         df = stock.get_index_ohlcv_by_date("20200101", "20200630", "1001", freq="m")
         #                시가     고가     저가     종가       거래량
         # 날짜
@@ -127,8 +121,8 @@ class TestIndexOhlcvByDate:
         assert isinstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
         assert df.index[0] < df.index[-1]
 
-    @pytest.mark.cassette("index/index_ohlcv_by_date_ohlcv_with_nan.yaml")
-    def test_ohlcv_with_nan(self, use_cassette):
+    @pytest.mark.vcr
+    def test_ohlcv_with_nan(self):
         df = stock.get_index_ohlcv_by_date("19800101", "20200831", "1001")
         #               시가      고가     저가     종가      거래량        거래대금
         # 날짜
@@ -141,8 +135,8 @@ class TestIndexOhlcvByDate:
 
 
 class TestIndexListingDate:
-    @pytest.mark.cassette("index/index_listing_date_listing_info.yaml")
-    def test_listing_info(self, use_cassette):
+    @pytest.mark.vcr
+    def test_listing_info(self):
         df = stock.get_index_listing_date()
         #                        기준시점    발표시점   기준지수  종목수
         # 지수명
@@ -159,10 +153,8 @@ class TestIndexListingDate:
 
 
 class TestIndexPriceChangeByTicker:
-    @pytest.mark.cassette(
-        "index/index_price_change_by_ticker_with_valid_business_days.yaml"
-    )
-    def test_with_valid_business_days(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_valid_business_days(self):
         df = stock.get_index_price_change_by_ticker("20210104", "20210108")
         #                           시가      종가     등락률      거래량         거래대금
         # 지수명
@@ -176,8 +168,8 @@ class TestIndexPriceChangeByTicker:
         assert temp.sum() == 5
         assert not df.empty
 
-    @pytest.mark.cassette("index/index_price_change_by_ticker_with_a_holiday_0.yaml")
-    def test_with_a_holiday_0(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_a_holiday_0(self):
         # 20210103 sunday / 20210108 friday
         df = stock.get_index_price_change_by_ticker("20210103", "20210108")
         temp = df.iloc[0:5, 0] == np.array([2873.47, 389.29, 2974.06, 2725.20, 1151.78])
@@ -185,8 +177,8 @@ class TestIndexPriceChangeByTicker:
         assert temp.sum() == 5
         assert not df.empty
 
-    @pytest.mark.cassette("index/index_price_change_by_ticker_with_a_holiday_1.yaml")
-    def test_with_a_holiday_1(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_a_holiday_1(self):
         # 20210104 monday / 20210109 saturday
         df = stock.get_index_price_change_by_ticker("20210104", "20210109")
         temp = df.iloc[0:5, 0] == np.array([2873.47, 389.29, 2974.06, 2725.20, 1151.78])
@@ -194,8 +186,8 @@ class TestIndexPriceChangeByTicker:
         assert temp.sum() == 5
         assert not df.empty
 
-    @pytest.mark.cassette("index/index_price_change_by_ticker_with_holidays.yaml")
-    def test_with_holidays(self, use_cassette):
+    @pytest.mark.vcr
+    def test_with_holidays(self):
         # 20210103 sunday / 20210110 sunday
         df = stock.get_index_price_change_by_ticker("20210103", "20210110")
         temp = df.iloc[0:5, 0] == np.array([2873.47, 389.29, 2974.06, 2725.20, 1151.78])
