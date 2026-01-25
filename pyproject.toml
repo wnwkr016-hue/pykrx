@@ -53,6 +53,7 @@ pykrx = ["*.ttf"]
 [tool.setuptools_scm]
 write_to = "pykrx/_version.py"
 local_scheme = "no-local-version"
+version_scheme = "no-guess-dev"
 
 # Ruff - Python linter/formatter (integrates Black, isort, Flake8)
 [tool.ruff]
