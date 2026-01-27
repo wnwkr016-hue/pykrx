@@ -6,20 +6,22 @@ import time
 import requests
 import random
 from datetime import datetime, timedelta
-import pytz # 한국 시간 계산용
+import pytz
+import plotly.graph_objects as go
 
 # --- [1] 페이지 설정 ---
 st.set_page_config(page_title="미너비니 주식 관제탑", layout="wide")
-st.title("🦅 미너비니 s전략 : 스마트 관제탑 (보안 강화)")
+st.title("🦅 미너비니 전략 : 실시간 관제탑 (최종)")
 
 # --- [2] 텔레그램 전송 함수 ---
 def send_telegram_msg(token, chat_id, message):
     try:
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         params = {"chat_id": chat_id, "text": message}
-        requests.get(url, params=params)
+        response = requests.get(url, params=params)
+        return response.json() # 결과 반환
     except Exception as e:
-        print(f"텔레그램 전송 실패: {e}")
+        return {"ok": False, "description": str(e)}
 
 # --- [3] 핵심 분석 로직 ---
 def check_minervini_conditions(ticker):
@@ -78,26 +80,36 @@ def check_minervini_conditions(ticker):
     except:
         return None
 
-# --- [4] 사이드바 설정 ---
-st.sidebar.header("설정")
+# --- [4] 사이드바 설정 (테스트 버튼 추가됨) ---
+st.sidebar.header("텔레그램 설정")
 tg_token = st.sidebar.text_input("텔레그램 봇 토큰", type="password")
 tg_id = st.sidebar.text_input("텔레그램 Chat ID")
 
+# ★ [테스트 버튼 추가] ★
+if st.sidebar.button("🔔 테스트 메시지 전송"):
+    if tg_token and tg_id:
+        res = send_telegram_msg(tg_token, tg_id, "🔔 [테스트] 미너비니 관제탑 알림이 정상 작동합니다!")
+        if res.get("ok"):
+            st.sidebar.success("전송 성공! 텔레그램을 확인하세요.")
+        else:
+            st.sidebar.error(f"전송 실패: {res.get('description')}")
+    else:
+        st.sidebar.warning("토큰과 Chat ID를 먼저 입력해주세요.")
+
+st.sidebar.markdown("---")
 menu = st.sidebar.radio("모드 선택", ["KOSPI 30 실시간 감시", "단일 종목 분석"])
 
 # ==========================================
-# [모드 1] KOSPI 30 실시간 감시 (최종 완성형)
+# [모드 1] KOSPI 30 실시간 감시 (봇 탐지 회피 + 랜덤 대기)
 # ==========================================
 if menu == "KOSPI 30 실시간 감시":
     st.header("🚨 KOSPI 시총 상위 30위 실시간 감시")
-    st.markdown("""
-    - **운영 시간**: 09:00 ~ 16:30 (자동 감지)
-    - **보안 모드**: 종목 간 1~3초 랜덤 / 전체 갱신 3~8분 랜덤 대기
-    """)
+    st.info("네이버 금융 서버 보호를 위해 종목 간 1초, 갱신 간 3~8분 랜덤 대기를 적용합니다.")
 
     # 한국 시간 설정
     KST = pytz.timezone('Asia/Seoul')
 
+    # 알림 보낸 종목 기억하기
     if 'sent_tickers' not in st.session_state:
         st.session_state['sent_tickers'] = []
 
@@ -106,77 +118,66 @@ if menu == "KOSPI 30 실시간 감시":
         table_placeholder = st.empty()
         
         while True:
-            # 1. 현재 시간 확인
+            # 장 운영 시간 확인 (09:00 ~ 16:30)
             now = datetime.now(KST)
-            current_time_str = now.strftime("%H:%M:%S")
-            
-            # 장 운영 시간 설정 (09:00 ~ 16:30)
+            current_time_str = now.strftime("%H:%M")
             start_time = now.replace(hour=9, minute=0, second=0, microsecond=0)
             end_time = now.replace(hour=16, minute=30, second=0, microsecond=0)
             
-            # === [케이스 1] 장 운영 시간인 경우 ===
             if start_time <= now <= end_time:
-                status_placeholder.markdown(f"🕒 **[{current_time_str}] 장 운영 중... 데이터를 스캔합니다.**")
+                status_placeholder.markdown("🕵️ **데이터 스캔 중... (천천히 훑어봅니다)**")
                 
                 try:
                     today = datetime.now().strftime("%Y%m%d")
                     tickers = stock.get_market_cap_by_ticker(today, market="KOSPI").head(30).index
                     
                     results = []
-                    alert_messages = []
+                    alert_messages = [] 
 
                     progress_bar = st.progress(0)
                     
-                    # 30개 종목 루프
                     for i, ticker in enumerate(tickers):
                         res = check_minervini_conditions(ticker)
                         if res:
                             results.append(res)
                             
-                            # 알림 조건: 강력 매수 + 아직 안 보낸 종목
+                            # 알림 로직
                             if "강력 매수" in res['상태'] and res['종목명'] not in st.session_state['sent_tickers']:
                                 msg = f"🚀 [미너비니 포착] {res['종목명']}\n현재가: {res['현재가']}\n피벗 포인트 돌파! 거래량 폭발!"
                                 alert_messages.append(msg)
                                 st.session_state['sent_tickers'].append(res['종목명'])
 
-                        # 진행률 업데이트
                         progress_bar.progress((i + 1) / len(tickers))
-                        
-                        # ★ [변경] 종목 사이 1.0초 ~ 3.0초 랜덤 휴식 (보안 강화)
-                        sleep_time = random.uniform(1.0, 3.0)
-                        time.sleep(sleep_time)
+                        time.sleep(1) # 종목 간 1초 휴식
                     
                     # 텔레그램 전송
                     if alert_messages and tg_token and tg_id:
                         full_msg = "\n\n".join(alert_messages)
                         send_telegram_msg(tg_token, tg_id, full_msg)
 
-                    # 결과 화면 표시
+                    # 화면 업데이트
                     monitor_df = pd.DataFrame(results)
                     if not monitor_df.empty:
                         monitor_df['우선순위'] = monitor_df['상태'].apply(lambda x: 0 if '강력 매수' in x else (1 if '관찰 중' in x else 2))
                         monitor_df = monitor_df.sort_values('우선순위').drop('우선순위', axis=1)
+                        
+                        # 랜덤 대기 시간 설정 (3~8분)
+                        wait_time = random.randint(180, 480)
+                        wait_min = wait_time // 60
+                        wait_sec = wait_time % 60
+                        
+                        status_placeholder.success(f"✅ 업데이트: {now.strftime('%H:%M:%S')} (다음 스캔까지 {wait_min}분 {wait_sec}초 무작위 대기...)")
                         table_placeholder.dataframe(monitor_df, height=800)
                     
-                    # ★ 전체 갱신 대기: 3분 ~ 8분 랜덤 설정
-                    wait_sec = random.randint(180, 480)
-                    wait_min = wait_sec // 60
-                    
-                    status_placeholder.success(f"✅ 스캔 완료: {current_time_str} (다음 스캔까지 {wait_min}분 대기...)")
-                    
-                    # 대기
-                    time.sleep(wait_sec)
+                    time.sleep(wait_time)
                     st.rerun()
 
                 except Exception as e:
-                    status_placeholder.error(f"⚠️ 오류 발생: {e} (1분 후 재시도)")
+                    status_placeholder.error(f"오류 발생: {e} (잠시 후 다시 시도합니다)")
                     time.sleep(60)
                     st.rerun()
-            
-            # === [케이스 2] 장 마감 시간인 경우 ===
             else:
-                status_placeholder.warning(f"🌙 **[{current_time_str}] 현재는 장 운영 시간이 아닙니다.** (09:00에 다시 시작됩니다)")
-                # 서버 자원 절약을 위해 1분 대기 후 시간 다시 확인
+                status_placeholder.warning(f"🌙 **[{current_time_str}] 장 운영 시간이 아닙니다.** (09:00 재시작)")
                 time.sleep(60)
                 st.rerun()
 
