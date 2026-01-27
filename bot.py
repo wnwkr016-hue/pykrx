@@ -11,35 +11,32 @@ TG_TOKEN = os.environ.get('TG_TOKEN')
 TG_ID = os.environ.get('TG_ID')
 
 # --- [설정] 필터링 기준 ---
-MIN_PRICE = 5000           # 5천원 이상
-MIN_TRADING_VALUE = 2000000000 # 20억 이상
+MIN_PRICE = 5000           
+MIN_TRADING_VALUE = 2000000000 
 
 # ---------------------------------------------------------
-# 1. 텔레그램 전송 함수 (에러 원인 출력 기능 추가)
+# 1. 텔레그램 전송 함수
 # ---------------------------------------------------------
 def send_telegram_msg(message):
     try:
         if not TG_TOKEN or not TG_ID:
-            print("❌ 오류: GitHub Secrets에 TG_TOKEN 또는 TG_ID가 없습니다.")
+            print("❌ 오류: GitHub Secrets 설정이 안되어 있습니다.")
             return
 
-        # 봇 토큰에 'bot' 접두어 중복 방지 처리
         token = TG_TOKEN.replace("bot", "") 
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         params = {"chat_id": TG_ID, "text": message}
         
         resp = requests.get(url, params=params)
-        
         if resp.status_code == 200:
             print("✅ 텔레그램 전송 성공!")
         else:
             print(f"❌ 전송 실패 (코드 {resp.status_code}): {resp.text}")
-            
     except Exception as e:
         print(f"❌ 연결 오류: {e}")
 
 # ---------------------------------------------------------
-# 2. RS 점수 계산 (Divide by Zero 해결 버전)
+# 2. RS 점수 계산 (에러 원천 봉쇄 버전)
 # ---------------------------------------------------------
 def get_market_ohlcv_safe(target_date):
     for _ in range(5):
@@ -59,7 +56,6 @@ def pre_calculate_rs_rank():
         now = datetime.now()
         today_str = now.strftime("%Y%m%d")
         
-        # 1. 오늘 데이터 및 필터링
         df_today, real_today = get_market_ohlcv_safe(today_str)
         if df_today is None: return {}, {}
 
@@ -67,7 +63,6 @@ def pre_calculate_rs_rank():
         filtered_df = df_today[condition].copy()
         valid_tickers = filtered_df.index
         
-        # 2. 과거 데이터 수집
         dates = {
             'T0': real_today,
             'T3': (now - timedelta(days=90)).strftime("%Y%m%d"),
@@ -84,10 +79,9 @@ def pre_calculate_rs_rank():
             else:
                 prices[key] = pd.Series(dtype='float64')
 
-        # 3. [핵심 수정] 0으로 나누기 방지
         df_calc = pd.DataFrame(prices).dropna()
         
-        # 주가가 0보다 큰 데이터만 남김 (나눗셈 에러 방지)
+        # [방어 코드 1] 데이터프레임 단계에서 0 제거
         df_calc = df_calc[
             (df_calc['T3'] > 0) & 
             (df_calc['T6'] > 0) & 
@@ -95,32 +89,39 @@ def pre_calculate_rs_rank():
             (df_calc['T12'] > 0)
         ]
 
-        # 수익률 계산
         df_calc['R1'] = (df_calc['T0'] - df_calc['T3']) / df_calc['T3']
         df_calc['R2'] = (df_calc['T3'] - df_calc['T6']) / df_calc['T6']
         df_calc['R3'] = (df_calc['T6'] - df_calc['T9']) / df_calc['T9']
         df_calc['R4'] = (df_calc['T9'] - df_calc['T12']) / df_calc['T12']
 
         df_calc['Raw_Score'] = (df_calc['R1'] * 0.4) + (df_calc['R2'] * 0.2) + (df_calc['R3'] * 0.2) + (df_calc['R4'] * 0.2)
-        
-        # 순위 매기기
         df_calc['Rank'] = df_calc['Raw_Score'].rank(ascending=False)
         total_count = len(df_calc)
         
         rs_dict = {}
         change_dict = {}
+        
         for ticker, row in df_calc.iterrows():
             rs_score = int(100 - (row['Rank'] / total_count * 100))
             if rs_score > 99: rs_score = 99
             if rs_score < 1: rs_score = 1
             rs_dict[ticker] = rs_score
-            change_dict[ticker] = (row['T0'] - row['T12']) / row['T12'] * 100
+            
+            # [★ 여기가 문제의 구간 - 무적 방어 코드 적용]
+            try:
+                # 1년 전 주가가 0이거나 비어있으면 계산 안 함
+                if row['T12'] == 0 or pd.isna(row['T12']):
+                    change_dict[ticker] = 0
+                else:
+                    change_dict[ticker] = (row['T0'] - row['T12']) / row['T12'] * 100
+            except:
+                change_dict[ticker] = 0 # 무슨 에러가 나든 그냥 0 처리
 
         print(f"✅ 정예 종목 {total_count}개 RS 산출 완료")
         return rs_dict, change_dict
 
     except Exception as e:
-        print(f"❌ RS 계산 오류: {e}")
+        print(f"❌ RS 계산 치명적 오류: {e}")
         return {}, {}
 
 # ---------------------------------------------------------
@@ -138,27 +139,42 @@ def check_stock(ticker, rs_map, change_map):
 
         current_price = df['종가'].iloc[-1]
         current_vol = df['거래량'].iloc[-1]
+        
+        # 이동평균선
         ma_50 = df['종가'].rolling(50).mean().iloc[-1]
         ma_150 = df['종가'].rolling(150).mean().iloc[-1]
         ma_200 = df['종가'].rolling(200).mean().iloc[-1]
         ma_200_prev = df['종가'].rolling(200).mean().iloc[-20]
+        
+        # 신고가/신저가
         low_52 = df['저가'].tail(252).min()
         high_52 = df['고가'].tail(252).max()
 
+        # 미너비니 8원칙 (Trend Template)
         cond_trend = (
-            current_price > ma_150 and current_price > ma_200 and
+            current_price > ma_150 and
+            current_price > ma_200 and
             current_price > ma_50 and
-            ma_150 > ma_200 and ma_50 > ma_150 and ma_50 > ma_200 and
+            ma_150 > ma_200 and
+            ma_50 > ma_150 and
+            ma_50 > ma_200 and
             ma_200 > ma_200_prev and
-            current_price > low_52 * 1.30 and current_price > high_52 * 0.75
+            current_price > low_52 * 1.30 and
+            current_price > high_52 * 0.75
         )
         if not cond_trend: return None
 
+        # 변동성 축소(VCP) 및 거래량 폭발
         recent_high = df['고가'].tail(20).max()
         recent_low = df['저가'].tail(20).min()
         volatility = (recent_high - recent_low) / recent_low
         avg_vol_50 = df['거래량'].tail(50).mean()
-        is_vol_explode = current_vol > (avg_vol_50 * 1.5)
+        
+        # 거래량이 평소보다 1.5배 이상 터졌는지
+        if avg_vol_50 > 0:
+            is_vol_explode = current_vol > (avg_vol_50 * 1.5)
+        else:
+            is_vol_explode = False
 
         if volatility <= 0.15 and current_price >= recent_high and is_vol_explode:
             name = stock.get_market_ticker_name(ticker)
@@ -181,8 +197,8 @@ if __name__ == "__main__":
 
     print("🚀 분석 시작...")
     
-    # [테스트 메시지] 잘 작동하는지 확인용
-    send_telegram_msg(f"🔔 [테스트] 봇 실행됨 (대기: {wait_sec}초)")
+    # [테스트용 알림] - 잘 되면 나중에 주석 처리하세요
+    send_telegram_msg(f"🔔 [봇 실행] 분석 시작합니다 (대기: {wait_sec}초)")
 
     rs_map, change_map = pre_calculate_rs_rank()
     
