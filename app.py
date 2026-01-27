@@ -2,12 +2,13 @@ import streamlit as st
 from pykrx import stock
 import pandas as pd
 import time
-import requests # 텔레그램 전송용
+import requests
 from datetime import datetime, timedelta
+import pytz # 한국 시간 계산을 위해 필요
 
 # --- [1] 페이지 설정 ---
 st.set_page_config(page_title="미너비니 주식 관제탑", layout="wide")
-st.title("🦅 미너비니 전략 : 실시간 관제탑 (텔레그램 알림)")
+st.title("🦅 미너비니 전략 : 실시간 관제탑 (시간제한)")
 
 # --- [2] 텔레그램 전송 함수 ---
 def send_telegram_msg(token, chat_id, message):
@@ -76,77 +77,70 @@ def check_minervini_conditions(ticker):
         return None
 
 # --- [4] 사이드바 설정 ---
-st.sidebar.header("텔레그램 설정")
+st.sidebar.header("설정")
 tg_token = st.sidebar.text_input("텔레그램 봇 토큰", type="password")
 tg_id = st.sidebar.text_input("텔레그램 Chat ID")
 
-st.sidebar.markdown("---")
-menu = st.sidebar.radio("모드 선택", ["KOSPI 30 실시간 감시", "단일 종목 분석"])
+# --- [5] 메인 화면 ---
+st.header("🚨 KOSPI 30 실시간 감시 (09:00 ~ 16:30)")
 
-# ==========================================
-# [모드 1] KOSPI 30 실시간 감시 (텔레그램 기능 추가)
-# ==========================================
-if menu == "KOSPI 30 실시간 감시":
-    st.header("🚨 KOSPI 시총 상위 30위 실시간 감시 (30초 갱신)")
+# 한국 시간 설정
+KST = pytz.timezone('Asia/Seoul')
+
+if 'sent_tickers' not in st.session_state:
+    st.session_state['sent_tickers'] = []
+
+if st.button("감시 시작 (멈추려면 '새로고침')"):
+    status_placeholder = st.empty()
+    table_placeholder = st.empty()
     
-    # 이미 알림을 보낸 종목을 기억하기 위한 리스트 (중복 알림 방지)
-    if 'sent_tickers' not in st.session_state:
-        st.session_state['sent_tickers'] = []
-
-    if st.button("감시 시작 (멈추려면 '새로고침')"):
-        status_placeholder = st.empty()
-        table_placeholder = st.empty()
+    while True:
+        # 현재 한국 시간 확인
+        now = datetime.now(KST)
+        current_time_str = now.strftime("%H:%M")
         
-        while True:
-            status_placeholder.markdown("🔄 **데이터 스캔 중... (약 10~20초 소요)**")
+        # [핵심] 09:00 ~ 16:30 사이인지 확인
+        start_time = now.replace(hour=9, minute=0, second=0, microsecond=0)
+        end_time = now.replace(hour=16, minute=30, second=0, microsecond=0)
+        
+        if start_time <= now <= end_time:
+            # === 장 운영 시간일 때 실행되는 로직 ===
+            status_placeholder.markdown(f"🕒 **[{current_time_str}] 장 운영 중... 데이터 스캔 시작!**")
+            
             today = datetime.now().strftime("%Y%m%d")
             tickers = stock.get_market_cap_by_ticker(today, market="KOSPI").head(30).index
             
             results = []
-            alert_messages = [] # 알림 보낼 메시지 모음
+            alert_messages = []
 
-            progress_bar = st.progress(0)
-            for i, ticker in enumerate(tickers):
+            for ticker in tickers:
                 res = check_minervini_conditions(ticker)
                 if res:
                     results.append(res)
-                    
-                    # [알림 로직] 강력 매수 신호이고, 아직 알림을 안 보냈다면?
                     if "강력 매수" in res['상태'] and res['종목명'] not in st.session_state['sent_tickers']:
                         msg = f"🚀 [미너비니 포착] {res['종목명']}\n현재가: {res['현재가']}\n피벗 포인트 돌파! 거래량 폭발!"
                         alert_messages.append(msg)
-                        st.session_state['sent_tickers'].append(res['종목명']) # 보낸 목록에 추가
+                        st.session_state['sent_tickers'].append(res['종목명'])
 
-                progress_bar.progress((i + 1) / len(tickers))
-            
-            # 텔레그램 메시지 전송
+            # 텔레그램 전송
             if alert_messages and tg_token and tg_id:
                 full_msg = "\n\n".join(alert_messages)
                 send_telegram_msg(tg_token, tg_id, full_msg)
-                st.toast(f"텔레그램 알림 전송 완료! ({len(alert_messages)}건)")
 
             # 화면 업데이트
             monitor_df = pd.DataFrame(results)
             if not monitor_df.empty:
                 monitor_df['우선순위'] = monitor_df['상태'].apply(lambda x: 0 if '강력 매수' in x else (1 if '관찰 중' in x else 2))
                 monitor_df = monitor_df.sort_values('우선순위').drop('우선순위', axis=1)
-                
-                now_time = datetime.now().strftime("%H:%M:%S")
-                status_placeholder.success(f"✅ 업데이트: {now_time} (30초 후 재검색)")
                 table_placeholder.dataframe(monitor_df, height=800)
             
-            # 30초 대기
-            time.sleep(30)
+            # 60초 대기 후 다시 검사
+            time.sleep(60)
             st.rerun()
-
-# ==========================================
-# [모드 2] 단일 종목 분석 (기존 유지)
-# ==========================================
-elif menu == "단일 종목 분석":
-    st.header("🔍 단일 종목 정밀 분석")
-    ticker = st.text_input("종목코드 (예: 000660)", "000660")
-    if st.button("분석 실행"):
-        res = check_minervini_conditions(ticker)
-        if res:
-            st.metric(label=res['종목명'], value=res['현재가'], delta=res['상태'])
-            st.json(res)
+            
+        else:
+            # === 장 마감 시간일 때 ===
+            status_placeholder.warning(f"🌙 **[{current_time_str}] 현재는 장 운영 시간이 아닙니다.** (09:00에 다시 시작됩니다)")
+            # 1분 대기 (서버 자원 절약)
+            time.sleep(60)
+            st.rerun()
