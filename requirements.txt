@@ -1,7 +1,3 @@
-streamlit
 pykrx
 pandas
-numpy
-plotly
 requests
-pytz
