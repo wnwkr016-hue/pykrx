@@ -174,7 +174,10 @@ if __name__ == "__main__":
 
     print("🚀 분석 시작...")
     rs_map, change_map = pre_calculate_rs_rank()
-    
+    send_telegram_msg(f"🔔 [테스트] 봇이 GitHub에서 정상 작동 중입니다! (대기시간: {wait_sec}초)")
+    # ▲▲▲ ----------------------- ▲▲▲
+
+    rs_map, change_map = pre_calculate_rs_rank()
     # 감시 대상: 코스피 시총 상위 50개
     today = datetime.now().strftime("%Y%m%d")
     target_tickers = stock.get_market_cap_by_ticker(today, market="KOSPI").head(50).index
