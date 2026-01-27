@@ -19,14 +19,31 @@ MIN_TRADING_VALUE = 2000000000 # 일 거래대금 20억 이상
 # ---------------------------------------------------------
 def send_telegram_msg(message):
     try:
+        # 토큰이나 ID가 없으면 아예 시도도 하지 않음
+        if not TG_TOKEN or not TG_ID:
+            print("❌ 오류: TG_TOKEN 또는 TG_ID가 설정되지 않았습니다.")
+            return
+
         url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
         params = {"chat_id": TG_ID, "text": message}
-        requests.get(url, params=params)
+        
+        # 전송 시도
+        resp = requests.get(url, params=params)
+        
+        # 결과 확인 (status_code가 200이면 성공, 아니면 실패)
+        if resp.status_code == 200:
+            print("✅ 텔레그램 전송 성공!")
+        else:
+            # ★ 여기가 중요합니다. 왜 실패했는지 이유를 알려줍니다.
+            print(f"❌ 텔레그램 전송 실패 (코드 {resp.status_code}): {resp.text}")
+            
     except Exception as e:
-        print(f"텔레그램 전송 실패: {e}")
-
+        print(f"❌ 연결 오류 발생: {e}")
 # ---------------------------------------------------------
 # 2. RS 점수 계산 (잡주 필터링 + IBD 가중치 적용)
+# ---------------------------------------------------------
+# ---------------------------------------------------------
+# [수정됨] 2. RS 점수 계산 (0으로 나누기 오류 해결 버전)
 # ---------------------------------------------------------
 def get_market_ohlcv_safe(target_date):
     """특정 날짜의 데이터 가져오기 (휴일 처리)"""
@@ -56,7 +73,7 @@ def pre_calculate_rs_rank():
         filtered_df = df_today[condition].copy()
         valid_tickers = filtered_df.index
         
-        # 2. 과거 데이터 수집 (3, 6, 9, 12개월 전)
+        # 2. 과거 데이터 수집
         dates = {
             'T0': real_today,
             'T3': (now - timedelta(days=90)).strftime("%Y%m%d"),
@@ -74,16 +91,26 @@ def pre_calculate_rs_rank():
             else:
                 prices[key] = pd.Series(dtype='float64')
 
-        # 3. 수익률 계산 및 가중치 합산 (IBD 공식)
+        # 3. 수익률 계산 (★여기가 수정되었습니다★)
         df_calc = pd.DataFrame(prices).dropna()
-        df_calc['R1'] = (df_calc['T0'] - df_calc['T3']) / df_calc['T3'] # 3개월
+        
+        # [ZeroDivisionError 방지] 주가가 0인 데이터 제거 (나눗셈 에러 방지)
+        df_calc = df_calc[
+            (df_calc['T0'] > 0) & 
+            (df_calc['T3'] > 0) & 
+            (df_calc['T6'] > 0) & 
+            (df_calc['T9'] > 0) & 
+            (df_calc['T12'] > 0)
+        ]
+
+        df_calc['R1'] = (df_calc['T0'] - df_calc['T3']) / df_calc['T3'] 
         df_calc['R2'] = (df_calc['T3'] - df_calc['T6']) / df_calc['T6']
         df_calc['R3'] = (df_calc['T6'] - df_calc['T9']) / df_calc['T9']
-        df_calc['R4'] = (df_calc['T9'] - df_calc['T12']) / df_calc['T12'] # 1년
+        df_calc['R4'] = (df_calc['T9'] - df_calc['T12']) / df_calc['T12']
 
         df_calc['Raw_Score'] = (df_calc['R1'] * 0.4) + (df_calc['R2'] * 0.2) + (df_calc['R3'] * 0.2) + (df_calc['R4'] * 0.2)
         
-        # 4. 순위 매기기 (1~99점)
+        # 4. 순위 매기기
         df_calc['Rank'] = df_calc['Raw_Score'].rank(ascending=False)
         total_count = len(df_calc)
         
@@ -102,7 +129,6 @@ def pre_calculate_rs_rank():
     except Exception as e:
         print(f"❌ RS 계산 오류: {e}")
         return {}, {}
-
 # ---------------------------------------------------------
 # 3. 개별 종목 정밀 분석 (미너비니 8대 조건)
 # ---------------------------------------------------------
@@ -174,10 +200,7 @@ if __name__ == "__main__":
 
     print("🚀 분석 시작...")
     rs_map, change_map = pre_calculate_rs_rank()
-    send_telegram_msg(f"🔔 [테스트] 봇이 GitHub에서 정상 작동 중입니다! (대기시간: {wait_sec}초)")
-    # ▲▲▲ ----------------------- ▲▲▲
-
-    rs_map, change_map = pre_calculate_rs_rank()
+    
     # 감시 대상: 코스피 시총 상위 50개
     today = datetime.now().strftime("%Y%m%d")
     target_tickers = stock.get_market_cap_by_ticker(today, market="KOSPI").head(50).index
