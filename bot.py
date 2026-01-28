@@ -64,65 +64,63 @@ def get_stock_status(ticker, rs_map):
         ma_50 = df['종가'].rolling(50).mean().iloc[-1]
         ma_150 = df['종가'].rolling(150).mean().iloc[-1]
         ma_200 = df['종가'].rolling(200).mean().iloc[-1]
-        ma_200_prev = df['종가'].rolling(200).mean().iloc[-25] # 한달전
+        ma_200_prev = df['종가'].rolling(200).mean().iloc[-25] 
         high_52 = df['고가'].tail(252).max()
         low_52 = df['저가'].tail(252).min()
         
-        # 추세 조건 (Minervini Trend Template)
         cond_trend = (
             curr_price > ma_150 and curr_price > ma_200 and
             ma_150 > ma_200 and
-            ma_200 > ma_200_prev and # 200일선 우상향
+            ma_200 > ma_200_prev and 
             curr_price > ma_50 and
-            curr_price >= (low_52 * 1.30) and # 바닥대비 30% 상승
-            curr_price >= (high_52 * 0.75) and # 신고가 근처
-            rs_score >= 70 # 시장 주도주
+            curr_price >= (low_52 * 1.30) and 
+            curr_price >= (high_52 * 0.75) and 
+            rs_score >= 70 
         )
 
-        # --- 2단계: VCP 패턴 수학적 감지 (Sniper Logic) ---
+        # --- 2단계: VCP 패턴 수학적 감지 ---
         
-        # (1) 변동성 축소 확인 (최근 10일간 등락폭이 좁은가?)
+        # (1) 변동성 축소 확인
         recent_10 = df.tail(10)
         max_price_10 = recent_10['고가'].max()
         min_price_10 = recent_10['저가'].min()
         volatility = (max_price_10 - min_price_10) / min_price_10
-        is_tight = volatility <= 0.12  # 최근 10일간 변동폭이 12% 이내 (빡빡함)
+        is_tight = volatility <= 0.12 
 
-        # (2) 거래량 말라죽음 확인 (Volume Dry-up)
+        # (2) 거래량 말라죽음 확인
         vol_5_avg = df['거래량'].tail(5).mean()
         vol_20_avg = df['거래량'].tail(20).mean()
-        is_vol_dry = vol_5_avg < vol_20_avg # 최근 거래량이 평균보다 적음
+        is_vol_dry = vol_5_avg < vol_20_avg
         
-        # (3) 피벗 포인트 근접 (전고점 턱밑)
-        recent_20_high = df['고가'].tail(20).max()
-        is_near_pivot = curr_price >= (recent_20_high * 0.97) # 전고점 대비 3% 이내 접근
+        # (3) 피벗 포인트 (최근 20일 고점 = 돌파해야 할 가격)
+        pivot_price = int(df['고가'].tail(20).max()) # ★ 여기가 돌파 기준가
+        is_near_pivot = curr_price >= (pivot_price * 0.97) 
 
         # --- 상태 판정 ---
         status_text = ""
         icon = ""
         
         if cond_trend:
-            # 추세는 완벽한데, 지금 당장 살 타이밍인가?
             if is_tight and is_near_pivot:
-                # 변동성 줄었고 + 전고점 턱밑이고 + (거래량까지 줄면 금상첨화)
                 if is_vol_dry:
                     status_text = "💎 매수임박 (VCP완성)"
-                    icon = "🔴" # 1순위 (강력 추천)
+                    icon = "🔴" 
                 else:
                     status_text = "매수준비 (돌파직전)"
-                    icon = "🟠" # 2순위 (거래량만 터지면 됨)
+                    icon = "🟠" 
             else:
                 status_text = "관심 (추세좋음)"
-                icon = "🟡" # 3순위 (추세는 좋으나 아직 조정폭이 큼)
+                icon = "🟡" 
         else:
             status_text = "관망"
-            icon = "⚪" # 4순위
+            icon = "⚪" 
 
         return {
             "name": name,
             "rs": rs_score,
             "status": status_text,
-            "icon": icon
+            "icon": icon,
+            "pivot_price": pivot_price # ★ 가격 정보 추가
         }
     except: return None
 
@@ -151,9 +149,11 @@ if __name__ == "__main__":
     if report_list:
         msg_lines = ["📊 [KOSPI Top 30] 미너비니 VCP 탐지기\n"]
         for item in report_list:
-            # 매수 관련 상태일 때만 가격 표시 (강조)
+            # 매수 관련 상태일 때 '돌파 기준가' 함께 표시
             if "매수" in item['status']:
-                line = f"{item['icon']} {item['name']} **[{item['status']}]**\n   └ RS {item['rs']}점"
+                line = (f"{item['icon']} {item['name']} **[{item['status']}]**\n"
+                        f"   └ 🎯 돌파기준가: {item['pivot_price']:,}원\n"
+                        f"   └ RS {item['rs']}점")
             else:
                 line = f"{item['icon']} {item['name']} ({item['status']})"
             msg_lines.append(line)
