@@ -15,9 +15,7 @@ TG_ID = os.environ.get('TG_ID')
 # ---------------------------------------------------------
 def send_telegram_msg(message):
     try:
-        if not TG_TOKEN or not TG_ID:
-            print("❌ Secrets 설정 누락")
-            return
+        if not TG_TOKEN or not TG_ID: return
         token = TG_TOKEN.replace("bot", "") 
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         params = {"chat_id": TG_ID, "text": message}
@@ -25,10 +23,10 @@ def send_telegram_msg(message):
     except: pass
 
 # ---------------------------------------------------------
-# 2. RS 점수 계산 (API 활용 - 고속 모드)
+# 2. RS 점수 계산
 # ---------------------------------------------------------
 def pre_calculate_rs_rank():
-    print("📊 RS 점수 계산 중...")
+    print("📊 RS 점수 & 차트 패턴 정밀 분석 중...")
     try:
         korea_now = datetime.utcnow() + timedelta(hours=9)
         today = korea_now.strftime("%Y%m%d")
@@ -44,11 +42,10 @@ def pre_calculate_rs_rank():
         for ticker, row in df_total.iterrows():
             rs_dict[ticker] = int(row['Rank'] * 100)
         return rs_dict
-    except:
-        return {}
+    except: return {}
 
 # ---------------------------------------------------------
-# 3. 개별 종목 상태 판독 (매수/대기/관망)
+# 3. [핵심] 미너비니 추세 + VCP 패턴 감지
 # ---------------------------------------------------------
 def get_stock_status(ticker, rs_map):
     try:
@@ -56,61 +53,90 @@ def get_stock_status(ticker, rs_map):
         today = korea_now.strftime("%Y%m%d")
         start_date = (korea_now - timedelta(days=400)).strftime("%Y%m%d")
         
-        # 차트 데이터 (최소 120일)
         df = stock.get_market_ohlcv(start_date, today, ticker)
-        if len(df) < 120: return None
+        if len(df) < 200: return None
 
         name = stock.get_market_ticker_name(ticker)
         curr_price = int(df['종가'].iloc[-1])
         rs_score = rs_map.get(ticker, 0)
         
-        # 이평선
+        # --- 1단계: 추세 (Trend Template) ---
         ma_50 = df['종가'].rolling(50).mean().iloc[-1]
         ma_150 = df['종가'].rolling(150).mean().iloc[-1]
         ma_200 = df['종가'].rolling(200).mean().iloc[-1]
-        
-        # 52주 신고가
+        ma_200_prev = df['종가'].rolling(200).mean().iloc[-25] # 한달전
         high_52 = df['고가'].tail(252).max()
+        low_52 = df['저가'].tail(252).min()
         
-        # --- [상태 판독 로직] ---
-        is_perfect = (curr_price > ma_50) and (ma_50 > ma_150) and (ma_150 > ma_200)
-        is_uptrend = curr_price > ma_200
-        is_near_high = curr_price >= (high_52 * 0.75)
+        # 추세 조건 (Minervini Trend Template)
+        cond_trend = (
+            curr_price > ma_150 and curr_price > ma_200 and
+            ma_150 > ma_200 and
+            ma_200 > ma_200_prev and # 200일선 우상향
+            curr_price > ma_50 and
+            curr_price >= (low_52 * 1.30) and # 바닥대비 30% 상승
+            curr_price >= (high_52 * 0.75) and # 신고가 근처
+            rs_score >= 70 # 시장 주도주
+        )
 
+        # --- 2단계: VCP 패턴 수학적 감지 (Sniper Logic) ---
+        
+        # (1) 변동성 축소 확인 (최근 10일간 등락폭이 좁은가?)
+        recent_10 = df.tail(10)
+        max_price_10 = recent_10['고가'].max()
+        min_price_10 = recent_10['저가'].min()
+        volatility = (max_price_10 - min_price_10) / min_price_10
+        is_tight = volatility <= 0.12  # 최근 10일간 변동폭이 12% 이내 (빡빡함)
+
+        # (2) 거래량 말라죽음 확인 (Volume Dry-up)
+        vol_5_avg = df['거래량'].tail(5).mean()
+        vol_20_avg = df['거래량'].tail(20).mean()
+        is_vol_dry = vol_5_avg < vol_20_avg # 최근 거래량이 평균보다 적음
+        
+        # (3) 피벗 포인트 근접 (전고점 턱밑)
+        recent_20_high = df['고가'].tail(20).max()
+        is_near_pivot = curr_price >= (recent_20_high * 0.97) # 전고점 대비 3% 이내 접근
+
+        # --- 상태 판정 ---
         status_text = ""
         icon = ""
         
-        if is_perfect and rs_score >= 70 and is_near_high:
-            status_text = "매수" # (강력추세)
-            icon = "🔴"
-        elif is_uptrend:
-            status_text = "매수대기" # (조정/약세)
-            icon = "🟡"
+        if cond_trend:
+            # 추세는 완벽한데, 지금 당장 살 타이밍인가?
+            if is_tight and is_near_pivot:
+                # 변동성 줄었고 + 전고점 턱밑이고 + (거래량까지 줄면 금상첨화)
+                if is_vol_dry:
+                    status_text = "💎 매수임박 (VCP완성)"
+                    icon = "🔴" # 1순위 (강력 추천)
+                else:
+                    status_text = "매수준비 (돌파직전)"
+                    icon = "🟠" # 2순위 (거래량만 터지면 됨)
+            else:
+                status_text = "관심 (추세좋음)"
+                icon = "🟡" # 3순위 (추세는 좋으나 아직 조정폭이 큼)
         else:
-            status_text = "관망" # (하락추세)
-            icon = "⚪"
+            status_text = "관망"
+            icon = "⚪" # 4순위
 
         return {
             "name": name,
             "rs": rs_score,
-            "status": status_text, # 여기에 '매수', '관망' 등이 들어감
+            "status": status_text,
             "icon": icon
         }
-    except:
-        return None
+    except: return None
 
 # ---------------------------------------------------------
 # 4. 실행부
 # ---------------------------------------------------------
 if __name__ == "__main__":
-    print("🚀 코스피 상위 30종목 분석 시작...")
+    print("🚀 코스피 Top 30 [미너비니 VCP] 정밀 탐지 시작...")
     
     rs_map = pre_calculate_rs_rank()
     
     korea_now = datetime.utcnow() + timedelta(hours=9)
     today = korea_now.strftime("%Y%m%d")
     
-    # 코스피 상위 30개
     top_30_tickers = stock.get_market_cap_by_ticker(today, market="KOSPI").head(30).index
     
     report_list = []
@@ -118,27 +144,26 @@ if __name__ == "__main__":
     for i, ticker in enumerate(top_30_tickers):
         info = get_stock_status(ticker, rs_map)
         if info:
-            print(f"[{i+1}] {info['name']} -> {info['status']}")
+            print(f"[{i+1}] {info['name']}: {info['status']}")
             report_list.append(info)
         time.sleep(0.1)
 
-    # 텔레그램 전송 (포맷 변경됨!)
     if report_list:
-        msg_lines = ["📊 [KOSPI Top 30] 현황판\n"]
-        
+        msg_lines = ["📊 [KOSPI Top 30] 미너비니 VCP 탐지기\n"]
         for item in report_list:
-            # ▼▼▼ 여기가 수정된 부분입니다 ▼▼▼
-            # 예시: 🔴 삼성전자 [매수] (RS: 80)
-            line = f"{item['icon']} {item['name']} [{item['status']}] (RS:{item['rs']})"
+            # 매수 관련 상태일 때만 가격 표시 (강조)
+            if "매수" in item['status']:
+                line = f"{item['icon']} {item['name']} **[{item['status']}]**\n   └ RS {item['rs']}점"
+            else:
+                line = f"{item['icon']} {item['name']} ({item['status']})"
             msg_lines.append(line)
             
         full_msg = "\n".join(msg_lines)
-        
         if len(full_msg) > 4000:
             send_telegram_msg(full_msg[:4000])
             send_telegram_msg(full_msg[4000:])
         else:
             send_telegram_msg(full_msg)
-        print("✅ 텔레그램 전송 완료")
+        print("✅ 리포트 전송 완료")
     else:
-        print("❌ 결과 없음")
+        print("❌ 실패")
