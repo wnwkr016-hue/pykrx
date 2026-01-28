@@ -1,29 +1,47 @@
 name: Stock Alarm
 
 on:
+  # 1. 코드를 올릴 때(Push) 자동 실행
+  push:
+    branches: [ "master" ]  # <--- 여기가 핵심입니다! (Main이 없으면 master)
+  
+  # 2. 10분마다 스케줄 실행 (평일 09:00~18:00)
   schedule:
-    # 한국 시간 평일 09:00 ~ 15:30 (10분 간격)
-    - cron: '*/10 0-6 * * 1-5'
+    - cron: '*/10 0-9 * * 1-5'
+
+  # 3. 수동으로 실행 버튼 만들기
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: 코드 가져오기
-        uses: actions/checkout@v3
+    - name: 저장소 코드 가져오기
+      uses: actions/checkout@v3
 
-      - name: 파이썬 설정
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+    - name: 파이썬 설정 (3.9 버전)
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: 라이브러리 설치
-        run: |
-          pip install -r requirements.txt
+    - name: 라이브러리 설치
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: 봇 실행
-        env:
-          TG_TOKEN: ${{ secrets.TG_TOKEN }}
-          TG_ID: ${{ secrets.TG_ID }}
-        run: python bot.py
+    - name: 봇 실행
+      env:
+        TG_TOKEN: ${{ secrets.TG_TOKEN }}
+        TG_ID: ${{ secrets.TG_ID }}
+      run: python bot.py
+
+    # (앱용 JSON 파일 저장 기능 - 필요 없으면 지워도 됩니다)
+    - name: 결과 파일 저장
+      continue-on-error: true
+      run: |
+        git config --global user.name "GitHub Action Bot"
+        git config --global user.email "action@github.com"
+        git add stocks.json
+        git commit -m "Update stock data" || exit 0
+        git push
