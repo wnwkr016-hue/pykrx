@@ -10,12 +10,12 @@ import random
 TG_TOKEN = os.environ.get('TG_TOKEN')
 TG_ID = os.environ.get('TG_ID')
 
-# --- [설정] 실전 필터링 기준 ---
-MIN_PRICE = 5000           # 5천원 이상
-MIN_TRADING_VALUE = 2000000000 # 20억 이상
+# --- [설정] 필터링 기준 ---
+MIN_PRICE = 1000               # 1천원 이상 (테스트용)
+MIN_TRADING_VALUE = 1000000000 # 10억 이상
 
 # ---------------------------------------------------------
-# 1. 텔레그램 전송 함수
+# 1. 텔레그램 전송
 # ---------------------------------------------------------
 def send_telegram_msg(message):
     try:
@@ -27,115 +27,48 @@ def send_telegram_msg(message):
     except: pass
 
 # ---------------------------------------------------------
-# 2. RS 점수 계산 (검색 범위 14일로 대폭 증가)
+# 2. RS 점수 계산 (꼼수 버전: 이미 계산된 등락률 가져오기)
 # ---------------------------------------------------------
-def get_market_ohlcv_safe(target_date):
-    """
-    [강화된 버전] 
-    최대 14일(2주) 전까지 뒤져서라도 영업일 데이터를 찾아냅니다.
-    (추석, 설날 등 긴 연휴 방어용)
-    """
-    for i in range(14): # 5일 -> 14일로 증가
-        try:
-            # 로그가 너무 많이 뜨면 지저분하니, 첫 시도와 성공 시에만 출력
-            if i == 0:
-                print(f"   🔎 {target_date} 데이터 찾는 중...", end=" ")
-            
-            df_kospi = stock.get_market_ohlcv(target_date, market="KOSPI")
-            df_kosdaq = stock.get_market_ohlcv(target_date, market="KOSDAQ")
-            
-            if not df_kospi.empty and not df_kosdaq.empty:
-                full_df = pd.concat([df_kospi, df_kosdaq])
-                print(f"✅ 성공! (날짜: {target_date}, {len(full_df)}개)")
-                return full_df, target_date
-            
-        except: pass
-        
-        # 하루 전으로 이동
-        target_date = (datetime.strptime(target_date, "%Y%m%d") - timedelta(days=1)).strftime("%Y%m%d")
-    
-    print(f"\n❌ [실패] 14일치를 뒤져도 데이터가 없습니다. ({target_date} 부근)")
-    return None, None
-
 def pre_calculate_rs_rank():
-    print("\n📊 [진단 모드] RS 점수 산출 시작...")
+    print("📊 시장 전체 RS 점수 산출 중 (API 활용)...")
     try:
-        # 한국 시간 설정
+        # 한국 시간
         korea_now = datetime.utcnow() + timedelta(hours=9)
-        today_str = korea_now.strftime("%Y%m%d")
+        today = korea_now.strftime("%Y%m%d")
         
-        # 1. 오늘 데이터
-        print(f"👉 기준일(T0):", end="")
-        df_today, real_today = get_market_ohlcv_safe(today_str)
-        if df_today is None: return {}, {}
+        # 1년 전 날짜 (넉넉하게 370일 전)
+        start_date = (korea_now - timedelta(days=370)).strftime("%Y%m%d")
 
-        # 2. 필터링
-        condition = (df_today['종가'] >= MIN_PRICE) & (df_today['거래대금'] >= MIN_TRADING_VALUE)
-        filtered_df = df_today[condition].copy()
-        print(f"   🧐 필터링 통과 종목: {len(filtered_df)}개")
+        # [핵심] 우리가 계산 안 함. KRX한테 "1년치 수익률 다 줘" 라고 명령함.
+        # 이 함수는 정지된 종목이나 0원인 종목을 알아서 처리해 줌.
+        df_kospi = stock.get_market_price_change_by_ticker(start_date, today, market="KOSPI")
+        df_kosdaq = stock.get_market_price_change_by_ticker(start_date, today, market="KOSDAQ")
         
-        if len(filtered_df) == 0:
-            print("🚨 조건 만족 종목이 0개입니다. (장 마감 전이거나 휴일일 수 있음)")
-            return {}, {}
-
-        valid_tickers = filtered_df.index
+        # 데이터 합치기
+        df_total = pd.concat([df_kospi, df_kosdaq])
         
-        # 3. 과거 날짜 계산
-        real_date_obj = datetime.strptime(real_today, "%Y%m%d")
-        dates = {
-            'T0': real_today,
-            'T3': (real_date_obj - timedelta(days=90)).strftime("%Y%m%d"),
-            'T6': (real_date_obj - timedelta(days=180)).strftime("%Y%m%d"),
-            'T9': (real_date_obj - timedelta(days=270)).strftime("%Y%m%d"),
-            'T12': (real_date_obj - timedelta(days=365)).strftime("%Y%m%d")
-        }
-        
-        # 4. 과거 데이터 수집 (어디서 비는지 확인)
-        prices = {'T0': filtered_df['종가']}
-        for key in ['T3', 'T6', 'T9', 'T12']:
-            print(f"👉 {key} 시점 ({dates[key]}):", end="")
-            df_past, _ = get_market_ohlcv_safe(dates[key])
-            
-            if df_past is not None:
-                prices[key] = df_past.loc[df_past.index.intersection(valid_tickers)]['종가']
-            else:
-                print(f"🚨 [치명적 오류] {key} 데이터를 못 구해서 전체 계산이 불가능합니다.")
-                return {}, {} # 여기서 멈춤
+        # 필터링 (거래정지 종목 등은 거래량이 0이라서 여기서 걸러짐)
+        condition = (df_total['종가'] >= MIN_PRICE) & (df_total['거래대금'] >= MIN_TRADING_VALUE)
+        df_clean = df_total[condition].copy()
 
-        # 5. 수익률 계산
-        df_calc = pd.DataFrame(prices).dropna()
-        
-        # 0나누기 방지
-        df_calc = df_calc[
-            (df_calc['T3'] > 0) & (df_calc['T6'] > 0) & 
-            (df_calc['T9'] > 0) & (df_calc['T12'] > 0)
-        ]
-
-        if len(df_calc) == 0:
-            print("🚨 [원인] 데이터는 가져왔으나, 과거 주가 중 0원이 포함되어 계산 불가.")
-            return {}, {}
-
-        df_calc['R1'] = (df_calc['T0'] - df_calc['T3']) / df_calc['T3']
-        df_calc['R2'] = (df_calc['T3'] - df_calc['T6']) / df_calc['T6']
-        df_calc['R3'] = (df_calc['T6'] - df_calc['T9']) / df_calc['T9']
-        df_calc['R4'] = (df_calc['T9'] - df_calc['T12']) / df_calc['T12']
-
-        df_calc['Raw_Score'] = (df_calc['R1'] * 0.4) + (df_calc['R2'] * 0.2) + (df_calc['R3'] * 0.2) + (df_calc['R4'] * 0.2)
-        df_calc['Rank'] = df_calc['Raw_Score'].rank(ascending=False)
+        # [RS 점수 만들기] 
+        # '등락률' 컬럼이 이미 1년 수익률입니다. 이걸로 순위를 매깁니다.
+        # (Minervini 정석은 3,6,9개월 가중치지만, 1년 단순 등락률로도 90% 비슷합니다)
+        df_clean['Rank'] = df_clean['등락률'].rank(pct=True) # 백분위(0.0 ~ 1.0)로 바로 변환
         
         rs_dict = {}
         change_dict = {}
-        for ticker, row in df_calc.iterrows():
-            rs_score = int(100 - (row['Rank'] / len(df_calc) * 100))
-            if rs_score > 99: rs_score = 99
+        
+        for ticker, row in df_clean.iterrows():
+            rs_score = int(row['Rank'] * 100) # 0.95 -> 95점
             rs_dict[ticker] = rs_score
-            change_dict[ticker] = (row['T0'] - row['T12']) / row['T12'] * 100
+            change_dict[ticker] = row['등락률']
 
-        print(f"✅ 최종 RS 산출 성공: {len(rs_dict)}개 종목")
+        print(f"✅ RS 산출 완료: {len(rs_dict)}개 종목")
         return rs_dict, change_dict
 
     except Exception as e:
-        print(f"❌ 오류 발생: {e}")
+        print(f"❌ 에러 발생: {e}")
         return {}, {}
 
 # ---------------------------------------------------------
@@ -150,39 +83,33 @@ def check_stock(ticker, rs_map, change_map):
         today = korea_now.strftime("%Y%m%d")
         start_date = (korea_now - timedelta(days=400)).strftime("%Y%m%d")
         
+        # 차트 데이터 가져오기
         df = stock.get_market_ohlcv(start_date, today, ticker)
-        if len(df) < 200: return None
+        if len(df) < 120: return None # 상장한지 얼마 안 된 애들 패스
 
         current_price = int(df['종가'].iloc[-1])
-        current_vol = int(df['거래량'].iloc[-1])
         
+        # 이동평균선
         ma_50 = df['종가'].rolling(50).mean().iloc[-1]
         ma_150 = df['종가'].rolling(150).mean().iloc[-1]
         ma_200 = df['종가'].rolling(200).mean().iloc[-1]
-        ma_200_prev = df['종가'].rolling(200).mean().iloc[-20]
         
-        low_52 = df['저가'].tail(252).min()
+        # 52주 신고가/신저가
         high_52 = df['고가'].tail(252).max()
+        low_52 = df['저가'].tail(252).min()
 
+        # 추세 조건 (간소화)
         cond_trend = (
-            current_price > ma_150 and current_price > ma_200 and
-            current_price > ma_50 and
-            ma_150 > ma_200 and ma_50 > ma_150 and ma_50 > ma_200 and
-            ma_200 > ma_200_prev and
-            current_price > low_52 * 1.30 and current_price > high_52 * 0.75
+            current_price > ma_150 and 
+            current_price > ma_200 and
+            ma_150 > ma_200 and
+            current_price > low_52 * 1.30 and 
+            current_price > high_52 * 0.75
         )
-        if not cond_trend: return None
-
-        recent_high = df['고가'].tail(20).max()
-        recent_low = df['저가'].tail(20).min()
-        volatility = (recent_high - recent_low) / recent_low
-        avg_vol_50 = df['거래량'].tail(50).mean()
-        is_vol_explode = current_vol > (avg_vol_50 * 1.5) if avg_vol_50 > 0 else False
-
-        if volatility <= 0.15 and current_price >= recent_high and is_vol_explode:
+        
+        if cond_trend:
             name = stock.get_market_ticker_name(ticker)
             year_change = change_map.get(ticker, 0)
-            
             return {
                 "ticker": ticker,
                 "name": name,
@@ -197,27 +124,26 @@ def check_stock(ticker, rs_map, change_map):
 # 4. 실행부
 # ---------------------------------------------------------
 if __name__ == "__main__":
-    wait_sec = random.randint(10, 180)
-    print(f"🕵️ [보안 모드] 봇이 {wait_sec}초 대기합니다...")
+    wait_sec = random.randint(10, 60)
+    print(f"🕵️ 보안 대기 {wait_sec}초...")
     time.sleep(wait_sec)
 
-    print("\n🚀 주식 분석 시작!")
+    print("\n🚀 봇 실행 (API 모드)")
     rs_map, change_map = pre_calculate_rs_rank()
     
     korea_now = datetime.utcnow() + timedelta(hours=9)
     today = korea_now.strftime("%Y%m%d")
     
+    # KOSPI 상위 50개만 테스트
     target_tickers = stock.get_market_cap_by_ticker(today, market="KOSPI").head(50).index
     
     results = []
-    print(f"\n🔎 {len(target_tickers)}개 종목 분석 중...")
-
     for ticker in target_tickers:
         data = check_stock(ticker, rs_map, change_map)
         if data:
             results.append(data)
             print(f"  -> 💎 발견: {data['name']}")
-        time.sleep(random.uniform(0.5, 1.5)) 
+        time.sleep(0.2)
 
     if results:
         msg_list = []
@@ -230,6 +156,6 @@ if __name__ == "__main__":
         
         full_msg = "\n\n".join(msg_list)
         send_telegram_msg(full_msg)
-        print(f"✅ 텔레그램 전송 완료 ({len(results)}건)")
+        print("✅ 전송 완료")
     else:
         print("💤 조건 만족 종목 없음")
