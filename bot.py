@@ -23,15 +23,16 @@ def send_telegram_msg(message):
     except: pass
 
 # ---------------------------------------------------------
-# 2. RS 점수 계산
+# 2. RS 점수 계산 (전체 시장 기준)
 # ---------------------------------------------------------
 def pre_calculate_rs_rank():
-    print("📊 RS 점수 & 차트 패턴 정밀 분석 중...")
+    print("📊 전체 시장 RS 점수 분석 중...")
     try:
         korea_now = datetime.utcnow() + timedelta(hours=9)
         today = korea_now.strftime("%Y%m%d")
         start_date = (korea_now - timedelta(days=370)).strftime("%Y%m%d")
 
+        # 코스피, 코스닥 모두 가져와서 통합 랭킹 산정
         df_kospi = stock.get_market_price_change_by_ticker(start_date, today, market="KOSPI")
         df_kosdaq = stock.get_market_price_change_by_ticker(start_date, today, market="KOSDAQ")
         
@@ -92,8 +93,8 @@ def get_stock_status(ticker, rs_map):
         vol_20_avg = df['거래량'].tail(20).mean()
         is_vol_dry = vol_5_avg < vol_20_avg
         
-        # (3) 피벗 포인트 (최근 20일 고점 = 돌파해야 할 가격)
-        pivot_price = int(df['고가'].tail(20).max()) # ★ 여기가 돌파 기준가
+        # (3) 피벗 포인트 (최근 20일 고점)
+        pivot_price = int(df['고가'].tail(20).max()) 
         is_near_pivot = curr_price >= (pivot_price * 0.97) 
 
         # --- 상태 판정 ---
@@ -120,7 +121,7 @@ def get_stock_status(ticker, rs_map):
             "rs": rs_score,
             "status": status_text,
             "icon": icon,
-            "pivot_price": pivot_price # ★ 가격 정보 추가
+            "pivot_price": pivot_price
         }
     except: return None
 
@@ -128,28 +129,35 @@ def get_stock_status(ticker, rs_map):
 # 4. 실행부
 # ---------------------------------------------------------
 if __name__ == "__main__":
-    print("🚀 코스피 Top 30 [미너비니 VCP] 정밀 탐지 시작...")
+    print("🚀 [KOSPI & KOSDAQ Top 60] 미너비니 VCP 탐지 시작...")
     
     rs_map = pre_calculate_rs_rank()
     
     korea_now = datetime.utcnow() + timedelta(hours=9)
     today = korea_now.strftime("%Y%m%d")
     
-    top_30_tickers = stock.get_market_cap_by_ticker(today, market="KOSPI").head(30).index
+    # [수정] 코스피 30개 + 코스닥 30개 가져오기
+    kospi_30 = stock.get_market_cap_by_ticker(today, market="KOSPI").head(30).index
+    kosdaq_30 = stock.get_market_cap_by_ticker(today, market="KOSDAQ").head(30).index
+    
+    # 두 리스트 합치기 (총 60개)
+    target_tickers = list(kospi_30) + list(kosdaq_30)
     
     report_list = []
+    print(f"🔎 총 {len(target_tickers)}개 대장주 분석 중...")
     
-    for i, ticker in enumerate(top_30_tickers):
+    for i, ticker in enumerate(target_tickers):
         info = get_stock_status(ticker, rs_map)
         if info:
             print(f"[{i+1}] {info['name']}: {info['status']}")
             report_list.append(info)
-        time.sleep(0.1)
+        time.sleep(0.1) # 속도 유지를 위해 0.1초 대기
 
     if report_list:
-        msg_lines = ["📊 [KOSPI Top 30] 미너비니 VCP 탐지기\n"]
+        # 제목 변경: KOSPI & KOSDAQ
+        msg_lines = ["📊 [KOSPI & KOSDAQ Top 60] VCP 탐지기\n"]
+        
         for item in report_list:
-            # 매수 관련 상태일 때 '돌파 기준가' 함께 표시
             if "매수" in item['status']:
                 line = (f"{item['icon']} {item['name']} **[{item['status']}]**\n"
                         f"   └ 🎯 돌파기준가: {item['pivot_price']:,}원\n"
@@ -159,6 +167,8 @@ if __name__ == "__main__":
             msg_lines.append(line)
             
         full_msg = "\n".join(msg_lines)
+        
+        # 내용이 길어지면 나눠서 전송
         if len(full_msg) > 4000:
             send_telegram_msg(full_msg[:4000])
             send_telegram_msg(full_msg[4000:])
