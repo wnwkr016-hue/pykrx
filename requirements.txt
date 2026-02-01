@@ -1,3 +1,6 @@
-pykrx
+streamlit
 pandas
-requests
+numpy
+pykrx
+yfinance
+plotly
