@@ -4,3 +4,6 @@ numpy
 pykrx
 yfinance
 plotly
+lxml
+html5lib
+
