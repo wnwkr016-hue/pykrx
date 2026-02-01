@@ -1,107 +1,177 @@
-# 1. 필요한 도구들을 가져옵니다.
-# (처음 실행 전 터미널에 'pip install pykrx pandas numpy' 입력 필수!)
-from pykrx import stock
+import streamlit as st
 import pandas as pd
 import numpy as np
+from pykrx import stock
+import yfinance as yf
 from datetime import datetime, timedelta
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-def analyze_stock(ticker, name):
-    """
-    종목코드(ticker)를 넣으면 데이터를 자동으로 가져와서 분석하는 함수
-    """
-    print(f"--- [{name} ({ticker})] 데이터를 수집 중입니다... ---")
+# ---------------------------------------------------------
+# 페이지 설정
+# ---------------------------------------------------------
+st.set_page_config(page_title="주식 하락 감지기", layout="wide")
+st.title("📉 주식 하락 위험 감지 대시보드")
+st.markdown("기술적 분석, 시장 심리, 거시 지표를 종합하여 하락 위험을 진단합니다.")
 
-    # ---------------------------------------------------------
-    # 1. [자동화] 오늘 날짜 기준으로 1년치 데이터 가져오기
-    # ---------------------------------------------------------
-    today = datetime.now().strftime("%Y%m%d") # 오늘 날짜 (예: 20231025)
-    start_date = (datetime.now() - timedelta(days=365)).strftime("%Y%m%d") # 1년 전 날짜
+# ---------------------------------------------------------
+# 사이드바 (입력창)
+# ---------------------------------------------------------
+st.sidebar.header("설정")
+ticker = st.sidebar.text_input("종목코드 입력 (예: 005930)", value="005930")
+days = st.sidebar.slider("분석 기간 (일)", 200, 500, 365)
+
+# 날짜 계산
+end_date = datetime.now().strftime("%Y%m%d")
+start_date = (datetime.now() - timedelta(days=days)).strftime("%Y%m%d")
+
+# ---------------------------------------------------------
+# 데이터 로딩 함수 (캐싱 적용으로 속도 향상)
+# ---------------------------------------------------------
+@st.cache_data
+def load_data(ticker, start, end):
+    try:
+        df = stock.get_market_ohlcv_by_date(start, end, ticker)
+        fundamental = stock.get_market_fundamental_by_date(start, end, ticker)
+        return df, fundamental
+    except Exception as e:
+        return None, None
+
+@st.cache_data
+def get_market_sentiment():
+    try:
+        # VIX (공포지수)
+        vix = yf.download("^VIX", period="5d", progress=False)
+        # 미국 10년물 국채
+        treasury = yf.download("^TNX", period="5d", progress=False)
+        return vix, treasury
+    except:
+        return None, None
+
+# 데이터 로드
+with st.spinner('데이터를 분석 중입니다...'):
+    df, fund = load_data(ticker, start_date, end_date)
+    vix_df, bond_df = get_market_sentiment()
+
+if df is None or df.empty:
+    st.error("데이터를 가져올 수 없습니다. 종목 코드를 확인해주세요.")
+    st.stop()
+
+# ---------------------------------------------------------
+# 1. 기술적 분석 지표 계산
+# ---------------------------------------------------------
+df['MA20'] = df['종가'].rolling(window=20).mean()
+df['MA50'] = df['종가'].rolling(window=50).mean()
+df['Vol_Avg'] = df['거래량'].rolling(window=20).mean()
+
+# RSI 계산
+delta = df['종가'].diff(1)
+gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+rs = gain / loss
+df['RSI'] = 100 - (100 / (1 + rs))
+
+# 볼린저 밴드
+df['BB_Mid'] = df['종가'].rolling(window=20).mean()
+df['BB_Std'] = df['종가'].rolling(window=20).std()
+df['BB_Upper'] = df['BB_Mid'] + (2 * df['BB_Std'])
+df['BB_Lower'] = df['BB_Mid'] - (2 * df['BB_Std'])
+
+# ---------------------------------------------------------
+# 위험 신호 탐지 로직
+# ---------------------------------------------------------
+signals = []
+
+# A. 데드크로스
+if df['MA20'].iloc[-2] > df['MA50'].iloc[-2] and df['MA20'].iloc[-1] < df['MA50'].iloc[-1]:
+    signals.append("🔴 [Dead Cross] 20일선이 50일선을 하향 돌파 (강한 하락 신호)")
+
+# B. 거래량 실린 장대음봉
+if df['거래량'].iloc[-1] > df['Vol_Avg'].iloc[-1] * 2 and df['시가'].iloc[-1] > df['종가'].iloc[-1] * 1.03:
+    signals.append("🔴 [Panic Selling] 거래량 급증 + 장대음봉 발생")
+
+# C. RSI 과매수 후 하락
+if df['RSI'].iloc[-2] >= 70 and df['RSI'].iloc[-1] < df['RSI'].iloc[-2]:
+    signals.append(f"🔴 [RSI Reversal] 과매수({df['RSI'].iloc[-2]:.1f}) 구간 진입 후 꺾임")
+
+# D. 볼린저 밴드 상단 이탈
+if df['고가'].iloc[-1] >= df['BB_Upper'].iloc[-1] and df['종가'].iloc[-1] < df['고가'].iloc[-1]:
+    signals.append("🔴 [Bollinger] 밴드 상단 터치 후 저항")
+
+# E. VIX 공포지수 (시장 심리)
+if vix_df is not None and not vix_df.empty:
+    cur_vix = vix_df['Close'].iloc[-1].item()
+    if cur_vix > 30:
+        signals.append(f"⚠️ [Macro] 공포지수(VIX)가 {cur_vix:.1f}로 매우 위험 수준")
+
+# F. 금리 (거시 경제)
+if bond_df is not None and not bond_df.empty:
+    cur_bond = bond_df['Close'].iloc[-1].item()
+    if cur_bond > 4.5:
+        signals.append(f"📉 [Macro] 미국 10년물 국채 금리가 {cur_bond:.2f}%로 높음")
+
+# ---------------------------------------------------------
+# 화면 출력 (UI)
+# ---------------------------------------------------------
+
+# 상단 요약
+col1, col2, col3 = st.columns(3)
+col1.metric("현재 주가", f"{df['종가'].iloc[-1]:,}원", f"{df['등락률'].iloc[-1]}%")
+col2.metric("RSI (14)", f"{df['RSI'].iloc[-1]:.1f}")
+if vix_df is not None:
+    col3.metric("VIX 지수", f"{vix_df['Close'].iloc[-1].item():.2f}")
+
+st.divider()
+
+# 신호 출력 구역
+st.subheader("🚨 위험 감지 리포트")
+
+if not signals:
+    st.success("현재 특이한 하락 징후가 발견되지 않았습니다. ✅")
+else:
+    for sig in signals:
+        st.error(sig)
+
+st.divider()
+
+# 차트 그리기 (Plotly)
+st.subheader("📊 기술적 분석 차트")
+
+fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
+                    vertical_spacing=0.1, subplot_titles=('주가 & 이동평균선 & 볼린저밴드', 'RSI & 거래량'), 
+                    row_width=[0.3, 0.7])
+
+# 캔들차트
+fig.add_trace(go.Candlestick(x=df.index,
+                open=df['시가'], high=df['고가'],
+                low=df['저가'], close=df['종가'], name='Price'), row=1, col=1)
+
+# 이동평균선
+fig.add_trace(go.Scatter(x=df.index, y=df['MA20'], line=dict(color='orange', width=1), name='MA 20'), row=1, col=1)
+fig.add_trace(go.Scatter(x=df.index, y=df['MA50'], line=dict(color='blue', width=1), name='MA 50'), row=1, col=1)
+
+# 볼린저밴드
+fig.add_trace(go.Scatter(x=df.index, y=df['BB_Upper'], line=dict(color='gray', width=1, dash='dot'), name='BB Upper'), row=1, col=1)
+fig.add_trace(go.Scatter(x=df.index, y=df['BB_Lower'], line=dict(color='gray', width=1, dash='dot'), name='BB Lower'), row=1, col=1)
+
+# RSI
+fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], line=dict(color='purple', width=2), name='RSI'), row=2, col=1)
+fig.add_shape(type="line", x0=df.index[0], y0=70, x1=df.index[-1], y1=70, line=dict(color="red", width=1, dash="dash"), row=2, col=1)
+fig.add_shape(type="line", x0=df.index[0], y0=30, x1=df.index[-1], y1=30, line=dict(color="green", width=1, dash="dash"), row=2, col=1)
+
+fig.update_layout(xaxis_rangeslider_visible=False, height=800)
+st.plotly_chart(fig, use_container_width=True)
+
+# 펀더멘털 정보
+if fund is not None and not fund.empty:
+    st.subheader("🏢 펀더멘털 체크")
+    last_eps = fund['EPS'].iloc[-1]
+    last_per = fund['PER'].iloc[-1]
     
-    # pykrx를 이용해 네이버 금융에서 일봉 데이터를 자동으로 긁어옵니다.
-    # (Open: 시가, High: 고가, Low: 저가, Close: 종가, Volume: 거래량)
-    df = stock.get_market_ohlcv(start_date, today, ticker)
+    f_col1, f_col2 = st.columns(2)
+    f_col1.info(f"EPS (주당순이익): {last_eps}원")
+    f_col2.info(f"PER (주가수익비율): {last_per}배")
     
-    # 데이터가 잘 왔는지 확인 (행이 비어있으면 오류)
-    if df.empty:
-        print("데이터를 가져오는데 실패했습니다. 종목코드를 확인해주세요.")
-        return
+    if last_eps < 0:
+        st.warning("⚠️ 주의: 최근 실적이 적자 상태입니다.")
 
-    # 컬럼 이름을 영문으로 변경 (분석하기 편하게)
-    df = df.rename(columns={'시가': 'Open', '고가': 'High', '저가': 'Low', '종가': 'Close', '거래량': 'Volume'})
-
-    # ---------------------------------------------------------
-    # 2. 미너비니 전략 분석 (이전과 동일한 로직)
-    # ---------------------------------------------------------
-    current_price = df['Close'].iloc[-1]
-    
-    # 이동평균선 계산
-    ma_150 = df['Close'].rolling(window=150).mean().iloc[-1]
-    ma_200 = df['Close'].rolling(window=200).mean().iloc[-1]
-    
-    # 52주 신고가/신저가
-    low_52 = df['Low'].tail(252).min()
-    high_52 = df['High'].tail(252).max()
-
-    # [필터 1] 2단계 상승 국면인지 확인
-    is_stage2 = (
-        current_price > ma_150 and
-        current_price > ma_200 and
-        current_price > low_52 * 1.25 and 
-        current_price > high_52 * 0.75
-    )
-
-    if not is_stage2:
-        print(f"결과: ❌ [탈락] 아직 상승 추세(2단계)가 아닙니다.")
-        return
-
-    # [필터 2] VCP 패턴 (변동성 수축) 확인
-    recent_high = df['High'].tail(20).max()
-    recent_low = df['Low'].tail(20).min()
-    volatility = (recent_high - recent_low) / recent_low
-    
-    if volatility > 0.15: 
-        print(f"결과: ⚠️ [관찰 필요] 변동성이 {volatility*100:.1f}%로 아직 큽니다. (15% 미만 권장)")
-        return
-
-    # ---------------------------------------------------------
-    # 3. 피벗 포인트 & 거래량 폭발 (핵심 매수 신호)
-    # ---------------------------------------------------------
-    pivot_point = recent_high # 최근 고점을 피벗 포인트로 설정
-    
-    current_vol = df['Volume'].iloc[-1]       # 오늘 거래량
-    avg_vol_50 = df['Volume'].tail(50).mean() # 평소(50일) 평균 거래량
-    
-    is_volume_explode = current_vol > (avg_vol_50 * 1.5) # 거래량 1.5배 폭발?
-
-    print(f"\n[분석 결과 보고서]")
-    print(f"현재가: {current_price:,.0f}원")
-    print(f"피벗 포인트(돌파 기준가): {pivot_point:,.0f}원")
-    print(f"오늘 거래량: {current_vol:,.0f}주 (평소 대비 {current_vol/avg_vol_50*100:.0f}%)")
-    
-    if current_price >= pivot_point and is_volume_explode:
-        print("""
-        ★★ [강력 매수 신호 포착!] ★★
-        1. 2단계 상승 추세 확인 완료 (OK)
-        2. VCP 변동성 수축 완료 (OK)
-        3. 피벗 포인트 돌파 + 거래량 폭발 발생! (기관 개입 가능성 높음)
-        
-        * 추천 손절가: """ + f"{int(pivot_point * 0.95):,.0f}" + "원 (-5%)")
-        
-    elif current_price >= pivot_point:
-        print("주의: 가격은 돌파했지만 거래량이 부족합니다. (가짜 돌파 위험)")
-        
-    else:
-        print(f"대기: 현재가({current_price})가 아직 피벗 포인트({pivot_point}) 아래입니다.")
-
-# ==========================================
-# [사용 방법] 분석하고 싶은 종목 코드만 넣으세요!
-# ==========================================
-
-# 예시 1: 삼성전자 (005930)
-analyze_stock("005930", "삼성전자")
-
-print("\n" + "="*50 + "\n")
-
-# 예시 2: SK하이닉스 (000660)
-analyze_stock("000660", "SK하이닉스")
-analyze_stock("042700", "한미반도체")
